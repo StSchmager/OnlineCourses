@@ -1,0 +1,678 @@
+---
+title: "Untitled"
+author: "Stefan Schmager"
+date: "February 5, 2016"
+output: html_document
+---
+
+# Quiz 1
+
+## Question 1
+
+Consider the data set given below
+```{r}
+x <- c(0.18, -1.54, 0.42, 0.95)
+```
+
+And weights given by
+
+```{r}
+w <- c(2, 1, 3, 1)
+```
+
+Give the value of mu that minimizes the least squares equation
+
+$$\sum_{i=1}^n w_i(x_i - \mu)$$
+
+```{r}
+# It would have been the mean of x, if it wasn't for the  weights
+mean(x)
+sum(x)/length(x)
+
+# Therefore, the weighted mean minimezed the least squares equation
+sum(x * w)/sum(w)
+
+```
+
+* 0.300
+
+* 0.0025
+
+* __0.1471__
+
+* 1.077
+
+## Question 2
+Consider the following data set
+```{r}
+x <- c(0.8, 0.47, 0.51, 0.73, 0.36, 0.58, 0.57, 0.85, 0.44, 0.42)
+y <- c(1.39, 0.72, 1.55, 0.48, 1.19, -1.59, 1.23, -0.65, 1.49, 0.05)
+```
+
+Fit the __regression through the origin__ and get the slope treating __y as the outcome__ and __x as the regressor__.
+(__Hint, do not center the data__ since we want regression through the origin, not through the means of the data.)
+
+```{r}
+coef(lm(y ~ x - 1))
+sum(y * x)/sum(x^2)
+```
+
+
+* -1.713
+
+* __0.8263__
+
+* -0.04462
+
+* 0.59915
+
+## Question 3
+
+Do data(mtcars) from the datasets package and fit the regression model with mpg as the outcome and weight as the predictor. Give the slope coefficient.
+
+```{r}
+library(datasets)
+data(mtcars)
+summary(lm(mpg ~ wt, mtcars))
+
+attach(mtcars)
+cor(mpg, wt) * sd(mpg)/sd(wt)
+detach(mtcars)
+```
+
+
+* -9.559
+
+* 30.2851
+
+* __-5.344__
+
+* 0.5591
+
+## Question 4
+
+Consider data with an outcome (Y) and a predictor (X). The standard deviation of the predictor is one half that of the outcome. The correlation between the two variables is .5. What value would the slope coefficient for the regression model with Y as the outcome and X as the predictor?
+
+```{r}
+sd_x   <- 1
+sd_y   <- 0.5*sd_x
+cor_xy <- .5
+
+cor_xy * sd_x/sd_y
+```
+
+
+* 3
+
+* __1__
+
+* 0.25
+
+* 4
+
+## Question 5
+
+Students were given two hard tests and scores were normalized to have empirical mean 0 and variance 1. The correlation between the scores on the two tests was 0.4. What would be the expected score on Quiz 2 for a student who had a normalized score of 1.5 on Quiz 1?
+
+```{r}
+#This is the classic regression to the mean problem. We are expecting the score to get multiplied by 0.4.
+
+.4*1.5
+```
+
+
+* 0.16
+
+* __0.6__
+
+* 1.0
+
+* 0.4
+
+## Question 6
+Consider the data given by the following
+```{r}
+x <- c(8.58, 10.46, 9.01, 9.64, 8.86)
+
+(x[1]-mean(x))/sd(x)
+```
+
+What is the value of the first measurement if x were normalized (to have mean 0 and variance 1)?
+
+* 9.31
+
+* 8.86
+
+* __-0.9719__
+
+* 8.58
+
+## Question 7
+Consider the following data set (used above as well). What is the intercept for fitting the model with x as the predictor and y as the outcome?
+```{r}
+x <- c(0.8, 0.47, 0.51, 0.73, 0.36, 0.58, 0.57, 0.85, 0.44, 0.42)
+y <- c(1.39, 0.72, 1.55, 0.48, 1.19, -1.59, 1.23, -0.65, 1.49, 0.05)
+
+lm(y ~ x)$coefficients[1]
+```
+* 1.252
+
+* 2.105
+
+* -1.713
+
+* __1.567__
+
+## Question 8
+
+You know that both the predictor and response have mean 0.
+
+What can be said about the intercept when you fit a linear regression?
+
+* It must be exactly one.
+
+* It is undefined as you have to divide by zero.
+
+* __It must be identically 0.__
+The intercept estimate is $\bar Y - \beta_1 \bar X$ and so will be zero.
+
+* Nothing about the intercept can be said from the information given.
+
+## Question 9
+Consider the data given by
+```{r}
+x <- c(0.8, 0.47, 0.51, 0.73, 0.36, 0.58, 0.57, 0.85, 0.44, 0.42)
+
+# This is the least squares estimate, which works out to be the mean in this case.
+
+mean(x)
+```
+
+What value minimizes the sum of the squared distances between these points and itself?
+
+* 0.44
+
+* __0.573__
+
+* 0.36
+
+* 0.8
+
+## Question 10 
+Let the slope having fit Y as the outcome and X as the predictor be denoted as $\beta_1$. Let the slope from fitting X as the outcome and Y as the predictor be denoted as $\gamma_1$. Suppose that you divide $\beta_1$ by $\gamma_1$; in other words consider $\beta_1/\gamma_1$. What is this ratio always equal to?
+
+* __Var(Y)/Var(X)__
+
+$\beta_1 = Cor(Y,X) SD(Y)/SD(X)$
+$\gamma_1 = Cor(Y,X) SD(X)/SD(Y)$.
+
+* Cor(Y,X) (false)
+
+* 2SD(Y)/SD(X) (false)
+
+* 1 (false)
+
+
+# Quiz 2
+
+# Question 1 
+Consider the following data with x as the predictor and y as as the outcome.
+
+```{r}
+x <- c(0.61, 0.93, 0.83, 0.35, 0.54, 0.16, 0.91, 0.62, 0.62)
+y <- c(0.67, 0.84, 0.6, 0.18, 0.85, 0.47, 1.1, 0.65, 0.36)
+```
+
+
+Give a __P-value__ for the two sided hypothesis test of whether $/beta_1$ from a linear regression model is 0 or not.
+
+```{r}
+summary(lm(y ~ x))$coefficients
+```
+
+
+* 0.391
+
+* __0.05296__
+
+* 2.325
+
+* 0.025
+
+# Question 2 
+Consider the previous problem, give the __estimate of the residual standard deviation__.
+
+* 0.4358
+
+* 0.3552
+
+* __0.223__
+
+* 0.05296
+
+# Question 3 
+In the mtcars data set, fit a linear regression model of __weight (predictor)__ on __mpg (outcome)__.
+Get a __95% confidence interval__ for the __expected mpg at the average weight__.
+What is the lower endpoint?
+
+```{r}
+# Center the weight variable since we want regression through mean of the data
+fit  <- lm(mpg ~ scale(wt), mtcars)
+coef <- summary(fit)$coefficients
+
+coef[1,1] +c(-1,1) * qt(.975, df = fit$df) *    coef[1,2]
+# coefficient estimate                          # coefficient std. error
+```
+
+
+* __18.991__
+
+* -6.486
+
+* -4.00
+
+* 21.190
+
+# Question 4 
+Refer to the previous question. Read the help file for mtcars. What is the weight coefficient interpreted as?
+
+* The estimated 1,000 lb change in weight per 1 mpg increase.
+
+* The estimated expected change in mpg per 1 lb increase in weight.
+
+* It can't be interpreted without further information
+
+* __The estimated expected change in mpg per 1,000 lb increase in weight.__
+
+# Question 5 
+Consider again the mtcars data set and a linear regression model with __mpg as predicted by weight (1,000 lbs)__.
+A __new car is coming weighing 3000 pounds__.
+Construct a 95% prediction interval for its mpg. What is the __upper endpoint__?
+```{r}
+attach(mtcars)
+fit         <- lm(mpg ~ wt, mtcars)
+newdata     <- data.frame(wt = 3)
+
+predict(fit, newdata, interval = "predict", level = .95)
+
+detach(mtcars)
+```
+
+
+* 21.25
+
+* 14.93
+
+* -5.77
+
+* __27.57__
+
+# Question 6 
+Consider again the mtcars data set and a linear regression model with __mpg as predicted by weight (in 1,000 lbs)__. A __"short" ton is defined as 2,000 lbs__.
+Construct a __95% confidence interval__ for the expected change in mpg per 1 short ton increase in weight. Give the lower endpoint.
+
+```{r}
+mtcars$wt_shortton <- mtcars$wt/2
+
+fit2  <- lm(mpg ~ wt_shortton, mtcars)
+coef2 <- summary(fit)$coefficients
+
+coef2[2,1] +c(-1,1) * qt(.975, df = fit2$df) *    coef2[2,2]
+# coefficient estimate                          # coefficient std. error
+```
+
+
+* 4.2026
+
+* -9.000
+
+* __-12.973__
+
+* -6.486
+
+# Question 7
+If my X from a linear regression is __measured in centimeters__ and I __convert it to meters__ what would happen to the slope coefficient?
+
+```{r}
+# cm to m | /100
+# slope coefficiont *100
+```
+
+
+* __It would get multiplied by 100__
+
+* It would get multiplied by 10
+
+* It would get divided by 100
+
+* It would get divided by 10
+
+# Question 8 
+I have an outcome, Y, and a predictor, X and fit a linear regression model with $Y=/beta_0+$$/beta_1X$$+/epsilon$ to obtain $/hat beta_0$ and $/hat beta_1$. What would be the __consequence to the subsequent slope and intercept__ if I were to __refit the model with a new regressor, $X+c$ for some constant__, $c$?
+
+* The new slope would be $/hat beta_1 + c$
+
+* The new intercept would be $/hat beta_0 + c/hat beta_1$
+
+* __The new intercept would be $/hat beta_0 - c/hat beta_1$__
+
+* The new slope would be $c/hat beta_1$
+
+# Question 9 
+Refer back to the mtcars data set with __mpg as an outcome and weight (wt) as the predictor__.
+About what is the ratio of the the sum of the squared errors, $$\sum_{i=1}^n (Y_i-(\hat Y_i)^2$ when comparing a
+model with just an __intercept (denominator)__ to the
+model with the __intercept and slope (numerator)__?
+
+```{r}
+round(sum((summary(lm(mpg ~ wt, mtcars))$residuals)^2)/
+            sum((summary(lm(mpg ~ 1,  mtcars))$residuals)^2), 2)
+
+
+```
+
+
+* __0.25__
+
+* 4.00 (false)
+
+* 0.75
+
+* 0.50
+
+# Question 10 
+Do the residuals always have to sum to 0 in linear regression?
+
+* If an intercept is included, the residuals most likely won't sum to zero.
+
+* The residuals must always sum to zero.
+
+* The residuals never sum to zero.
+
+* __If an intercept is included, then they will sum to 0.__
+
+# Week 3
+
+## QUestion 1
+Consider the mtcars data set. Fit a model with __mpg as the outcome__ that includes __number of cylinders as a factor variable__ and __weight as confounder__.
+
+```{r}
+library(datasets)
+data(mtcars)
+mtcars$cyl <- factor(mtcars$cyl)
+relevel(mtcars$cyl, "8")
+attach(mtcars)
+fit1 <- lm(mpg ~ cyl + wt, mtcars)
+summary(fit1)$coef
+```
+
+
+Give the __adjusted estimate__ for the __expected change in mpg__ __comparing 8 cylinders to 4__.
+
+* -3.206
+
+* -4.256
+
+* 33.991
+
+* __-6.071__
+
+## QUestion 2 
+Consider the mtcars data set. Fit a model with __mpg as the outcome__ that includes __number of cylinders as a factor variable__ and __weight as a possible confounding variable__.
+```{r}
+summary(fit1)$coeff[3, 1]
+summary(lm(mpg ~ cyl, mtcars))$coeff[3, 1]
+```
+
+Compare the __effect of 8 versus 4 cylinders on mpg__ for the __adjusted and unadjusted by weight models__.
+Here, __adjusted means including the weight variable__ as a term in the regression model
+and __unadjusted means the model without weight__ included.
+
+What can be said about the effect comparing 8 and 4 cylinders after looking at models with and without weight included?.
+
+* Including or excluding weight does not appear to change anything regarding the estimated impact of number of cylinders on mpg.
+
+* __Holding weight constant, cylinder appears to have less of an impact on mpg than if weight is disregarded.__
+(It is both true and sensible that including weight would attenuate the effect of number of cylinders on mpg.)
+
+* Holding weight constant, cylinder appears to have more of an impact on mpg than if weight is disregarded.
+
+* Within a given weight, 8 cylinder vehicles have an expected 12 mpg drop in fuel efficiency.
+
+## QUestion 3
+Consider the mtcars data set. Fit a model with __mpg as the outcome__ that considers __number of cylinders as a factor variable__ and __weight as confounder__.
+Now fit a second model with __mpg as the outcome__ model that considers the __interaction between number of cylinders (as a factor variable) and weight__.
+```{r}
+fit1
+fit2 <- lm(mpg ~ cyl*wt, mtcars)
+summary(fit1)$coef
+summary(fit2)$coef
+anova(fit1, fit2)
+```
+
+Give the P-value for the likelihood ratio test comparing the two models and suggest a model using 0.05 as a type I error rate significance benchmark.
+
+* __The P-value is larger than 0.05. So, according to our criterion, we would fail to reject, which suggests that the interaction terms may not be necessary.__
+
+* The P-value is small (less than 0.05). Thus it is surely true that there is no interaction term in the true model.
+
+* The P-value is larger than 0.05. So, according to our criterion, we would fail to reject, which suggests that the interaction terms is necessary.
+
+* The P-value is small (less than 0.05). So, according to our criterion, we reject, which suggests that the interaction term is necessary
+
+* The P-value is small (less than 0.05). Thus it is surely true that there is an interaction term in the true model.
+
+* The P-value is small (less than 0.05). So, according to our criterion, we reject, which suggests that the interaction term is not necessary.
+
+## QUestion 4
+Consider the mtcars data set. Fit a model with __mpg as the outcome__ that includes __number of cylinders as a factor variable and weight__ included in the model as
+```{r}
+lm(mpg ~ cyl + I(wt * 0.5), data = mtcars)
+
+# weight originally in 1000 lbs., now in 500 lbs which equals a quarter ton
+```
+
+How is the wt coefficient interpretted?
+
+* __The estimated expected change in MPG per one ton increase in weight for a specific number of cylinders (4, 6, 8).__
+
+* The estimated expected change in MPG per half ton increase in weight for the average number of cylinders. (False)
+
+* The estimated expected change in MPG per half ton increase in weight. (false)
+
+* The estimated expected change in MPG per one ton increase in weight.
+
+* The estimated expected change in MPG per half ton increase in weight for for a specific number of cylinders (4, 6, 8). (false)
+(whichever is the first, intercept, factor in the model)
+
+## QUestion 5
+Consider the following data set
+```{r}
+x <- c(0.586, 0.166, -0.042, -0.614, 11.72)
+y <- c(0.549, -0.026, -0.127, -0.751, 1.344)
+
+max(hatvalues(lm(y ~ x)))
+influence(lm(y ~ x))$hat
+
+## showing how it's actually calculated
+xm <- cbind(1, x)
+diag(xm %*% solve(t(xm) %*% xm) %*% t(xm))
+```
+
+Give the __hat diagonal__ for the most influential point
+
+* 0.2287
+
+* __0.9946__
+
+* 0.2025
+
+* 0.2804
+
+## QUestion 6
+Consider the following data set
+```{r}
+x <- c(0.586, 0.166, -0.042, -0.614, 11.72)
+y <- c(0.549, -0.026, -0.127, -0.751, 1.344)
+
+dfbetas(lm(y ~ x))
+influence.measures(lm(y ~ x))
+```
+
+Give the slope dfbeta for the point with the highest __hat value__.
+
+* 0.673
+
+* -.00134
+
+* -0.378
+
+* __-134__
+
+## QUestion 7
+Consider a __regression relationship between Y and X with and without adjustment for a third variable Z__.
+
+Which of the following is true about comparing the regression coefficient between Y and X with and without __adjustment__ for Z.
+
+* __It is possible for the coefficient to reverse sign after adjustment. For example, it can be strongly significant and positive before adjustment and strongly significant and negative after adjustment.__
+
+* Adjusting for another variable can only attenuate the coefficient toward zero. It can't materially change sign.
+
+* The coefficient can't change sign after adjustment, except for slight numerical pathological cases.
+
+* For the the coefficient to change sign, there must be a significant interaction term.
+
+# Quiz 4
+
+## Question 1 
+Consider the space shuttle data
+```{r}
+library(MASS)
+data(shuttle)
+head(shuttle); str(shuttle)
+
+fit <- glm(relevel(use, "noauto") ~ relevel(wind, "tail"),
+                   data = shuttle, family="binomial") 
+summary(fit)
+exp(fit$coeff)
+```
+
+Consider modeling the use of the autolander as the outcome (variable name __use__).
+Fit a __logistic regression model__ with autolander (variable auto) __use__ (labeled as "auto" 1) versus not (0) as predicted by wind sign (variable wind).
+Give the __estimated odds ratio__ for autolander use comparing head winds, labeled as "head" in the variable headwind (numerator) to tail winds (denominator).
+
+* 0.031
+
+* 1.327
+
+* -0.031
+
+* __0.969__
+
+## Question 2 
+Consider the previous problem. Give the __estimated odds ratio__ for autolander use comparing head winds (numerator) to tail winds (denominator) __adjusting for wind strength from the variable magn.__
+```{r}
+fit2 <- update(fit, use ~ wind + magn)
+
+exp(fit2$coeff)
+```
+
+
+* 1.485
+
+* __0.969__
+
+* 0.684
+
+* 1.00
+
+## Question 3
+If you fit a logistic regression model to a binary variable, for example use of the autolander, then __fit a logistic regression model for one minus the outcome (not using the autolander)__ what happens to the coefficients?
+```{r}
+logRegShuttle3 <- glm(shuttle$use ~ shuttle$wind,family="binomial")
+```
+
+
+* The coefficients change in a non-linear fashion.
+
+* The coefficients get inverted (one over their previous value). (false)
+
+* __The coefficients reverse their signs.__
+(The coefficients are on the log scale. So changing the sign changes the numerator and denominator for the exponent.)
+
+* The intercept changes sign, but the other coefficients don't.
+
+## Question 4 
+Consider the insect spray
+```{r}
+data(InsectSprays)
+head(InsectSprays)
+str(InsectSprays)
+
+glm(count ~ spray,
+    data = InsectSprays, family="poisson")$coef[2]/glm(count ~ spray,
+    data = InsectSprays, family="poisson")$coef[1]
+
+      
+```
+Fit a __Poisson model__ using spray as a factor level.
+Report the estimated relative rate comapring spray A (numerator) to spray B (denominator).
+
+* __0.9457__
+
+* 0.321
+
+* -0.056
+
+* 0.136
+
+## Question 5 
+Consider a Poisson glm with an offset, __t__.
+
+So, for example, a model of the form
+```{r}
+glm(count ~ x + offset(t), family = poisson)
+```
+where __x__ is a factor variable comparing a treatment (1) to a control (0) and __t__ is the natural log of a monitoring time.
+What is impact of the coefficient for __x__ if we fit the model
+```{r}
+glm(count ~ x + offset(t2), family = poisson)
+```
+where __t2 <- log(10) + t__?
+In other words, what happens to the coefficients if we change the units of the offset variable. (Note, adding log(10) on the log scale is multiplying by 10 on the original scale.)
+
+* The coefficient is subtracted by log(10).
+
+* The coefficient estimate is multiplied by 10.
+
+* The coefficient estimate is divided by 10.
+
+* __The coefficient estimates are unchanged__
+except the intercept, which is shifted by log(10). Recall that, except the intercept, all of the coefficients are interpretted as log relative rates when holding the other variables or offset constant. Thus, a unit change in the offset would cancel out. This is not true of the intercept, which is interperted as the log rate (not relative rate) with all of the covariates set to 0.
+
+
+## Question 6 
+Consider the data
+```{r}
+x <- -5:5
+y <- c(5.12, 3.93, 2.67, 1.87, 0.52, 0.08, 0.93, 2.05, 2.54, 3.87, 4.97)
+```
+
+Using a __knot__ point at 0, fit a linear model that looks like a hockey stick with two lines meeting at x=0. Include an intercept term, x and the knot point term.
+
+What is the estimated slope of the line after 0?
+
+```{r}
+z <- (x > 0) * x
+fit <- lm(y ~ x + z)
+sum(coef(fit)[2:3])
+```
+
+
+* 2.037
+
+* -1.024
+
+* -0.183
+
+* __1.013__

@@ -1,0 +1,251 @@
+---
+title: 'Regression Modeling in R: Impact of Car Transmission Type (Automatic vs. Manual)
+  on Mileage Based on the "Motor Trends" Cars Dataset'
+author: "Stefan Schmager"
+date: "April 3, 2016"
+output: pdf_document
+---
+
+# Author's Remark
+
+The author of this paper is aware of the page limitation, but kindly asks to excuse that violation. This project was way too much fun to be pressed into two pages! ;) 
+
+# Executive Summary
+
+This is the final project for the course [Regression Models](https://www.coursera.org/learn/regression-models) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science). The project is based on the widely demonstrated R dataset _mtcars_, which is an extract from an article of _Motor Trend_, a magazine about the automobile industry. Looking at a data set of a collection of cars, the project aims to explore the relationship between a set of predictor variables (car features) and miles per gallon (MPG) as the outcome variable. One is particularly interested in the following two questions: __Is an automatic or manual transmission better for MPG? How can the MPG difference between automatic and manual transmissions be quantified?__
+After preparing the data and applying a few data manipulations, the two main variables (both predictor of interest and outcome) are visualized by a boxplot as part of an initial exploratory data analysis (EDA). Further, the EDA is translated into a first, linear regression model that's unadjusted for any other variable. Then, the basic multivariate regression model is constructed by including all other available (and potentially MPG predicting) variables before a nested regression modeling approach is applied. This approach always includes transmission type as a steady regressor, but gradually adjusts for other selected variables. Both from a statistical and logical, common-sense point of view certain variables are added to the model sequence and removed from the model after the series of regression models has been tested with the help of analysis of variance.
+The final model that's used to answer the research questions is summarized and troughly explained with the help of coeficient, other summary-measure, and diagnostic-plot interpretations.
+It turns out that neither automatic, nor manual transmissions are better for MPG. Rather, other features of a car can predict its MPG much better than solely the transmission type.
+
+# Data Preparation
+
+```{r message=FALSE}
+library(datasets); library(ggplot2); library(dplyr)
+```
+These R packages are used in the whole analysis.
+
+```{r}
+data(mtcars) #Load data set
+```
+The _Motor Trend_ dataset (mtcars) is the basis of this analysis. According to its R documenation, the data was extracted from the 1974 _Motor Trend_ US magazine, and comprises fuel consumption, miles per (U.S.) gallon (_MPG__), and 10 additional aspects of automobile design and performance (such as automatic or manual transmission, abbr. __Trans__) for 32 automobiles (1973-74 models).
+
+```{r}
+cars <- transmute(mtcars,
+                  MPG    = as.numeric(mpg),
+                  Trans  = factor(am,
+                                  levels = c(0,      1),
+                                  labels = c("Auto", "Manu")),
+                  Weight = as.numeric(wt),       # Weight (1000 lbs)
+                  Cyl    = as.numeric(cyl),      # Number of cylinders
+                  Displ  = as.numeric(disp),     # Displacement (cu.in.)
+                  HP     = as.numeric(hp),       # Gross horsepower
+                  RAR    = as.numeric(drat),     # Rear axle ratio
+                  QMTime = as.numeric(qsec),     # 1/4 mile time
+                  VS     = factor(vs),           # ??? (documentation doesn't explain)
+                  Gear   = as.numeric(gear),     # Number of forward gears
+                  Carb   = as.numeric(carb)) %>% # Number of carburetors
+      arrange(desc(MPG))
+row.names(cars) <- row.names(mtcars)             # Name row names
+head(cars, 5)                                    # Top 5 cars re: MPG
+tail(cars, 5)                                    # Bottom 5 cars re: MPG
+table(cars$Trans)                                # Frequency table re: Trans
+```
+The original dataset is transformed to an information-identical dataset, however, with more intuitive variable names and data types. __MPG__ remains a continuous variable, whereas __Trans__ (formerly _am_ in original dataset) is transformed to a nominal factor variale with 0 being automatic (__auto__) and 1 being manual (__manu__). The 32 cars are listed in descending order by their mileage and indicated by their transmission type: 19 cars are automatic, 13 are manual. The top and bottom five most, respectively least fuel-efficient cars are shown.
+
+# Exploratory Data Analysis
+
+```{r fig.height=3}
+ggplot(cars, aes(x = Trans, y = MPG)) + geom_boxplot() +
+      labs(title = "Boxplot", x = "Transmission", y = "Miles per (U.S.) gallon")
+as.data.frame(summarise(group_by(cars, Trans),
+                        AverageMPG = round(mean(MPG), 1),
+                        MedianMPG = median(MPG)))
+```
+
+The boxplot below compares cars with __automatic and manual transmission__ according to their __MPG__. As shown in the plot, cars with __manual transmission yield a higher mileage than cars with an automatic transmission__ regardless of any other for any other variable. The measures of central tendency, average and median, quantify this difference for the two groups of cars.
+
+# Initial (Unadjusted) Regression Model 
+
+```{r}
+# Build first regression model
+fit1 <- lm(MPG ~ Trans, cars)
+# Show regression coeficients
+coef(fit1)
+```
+
+The coeficients of our first, linear regression model yield the same result as described above. __MPG__ is the model's outcome variable and __Trans__ is the only regressor for now; hence, the model is unadjusted for any other variable.
+
+The __intercept__ (coefficient) describes the __average MPG__ of the first transmission type: __automatic being the reference group__ of this model. That confirms the average MPG that was computed before for cars with automatic transmission.
+The __coefficient of the regressor__ being the other transmission type is interpretted as the change in the MPG mean comparing those with __manual transmission (TransManu)__ to those without, hence, with automatic transmission as the reference group. The regression coefficient is positive and describes the incremental mileage (in MPG) of manual cars compared to automatic cars; that's also the difference of the averages that was computed above.
+
+# Additional Models Adjusted for Other Variables
+
+Omitting other model variables (regressors) can bias the estimation of the coefficients of interest (__Trans__). Therefore, in addition to the initial model, alternative multivariate regression models will be constructed.
+Given our coefficient of interest, covariate adjustment is used and multiple models are built by adding other regressors to probe the effect (of car __Trans__ on __MPG__) to evaluate for robustness and to see how other covariates influence the effect. Modeling multivariate relationships is difficult. Therefore, we try to play around with the dataset to see how the inclusion or exclustion of another variable can change the analysis.
+
+On the one end of the spectrum of model possibilities, our first model (__fit1__) included just __one regressor__: __Trans__. In contrast, another model (__fit0__) is constructed that includes __all other variables of the dataset__ as regressors (a.k.a. covariates) except the __outcome variable MPG__, of course.
+
+```{r}
+# Build basic model that includes all variables
+fit0  <- lm(          MPG ~ . , cars)
+# Re-build first regression model with a different function that's based on the basic model
+fit1  <- update(fit0, MPG ~ Trans)
+# Compare regression coeficients
+coef(fit1); coef(fit0)
+```
+
+In comparing the two pairs of coeficients (__Intercept and TransManu__) of the two models, the MPG averages for cars with __automatic and manual transmission__ are lower once we adjust for all other covariates that may have an influence on __MPG__.
+Also, comparing the coeficients of the basic model (__fit0__) with one another, the average MPG of __manual__ cars seems still higher compared to __automatic__ cars, yet not as different as before when we compared without adjustment of other variables (__fit1__).
+
+From a more statistics-, regression-unrelated and real-world point of view - although from the point of view of someone that has a limited knowledge of automobiles, yet a decent understanding of physics - , the __weight__ of a car (here measured in ths. lbs.) seems to have a clear impact on its mileage. In other words, the heavier a car, the less miles it can reach with one gallon of fuel.
+The coeficient of the regressor __Weight__ has the units __MPG per 1,000 lbs__. In other words, the coefficient of -3.7 is the expected change in miles per gallon for every aditional 1,000 lbs change in the weight of the car holding all of the other regressors fixed/constant.
+
+```{r fig.height=3}
+# Draw boxplot
+ggplot(cars, aes(x = Trans, y = Weight)) + geom_boxplot() +
+      labs(title = "Boxplot 2", x = "Transmission", y = "Weight (in ths. lbs.)")
+```
+
+As mentioned before, omitting other regressor (such as __weight__) can bias the estimation of the coefficient of certain other correlated regressors. __Boxplot 2__ shows that automatic cars tend to be heavier than manual cars. So, what if the __effect of transmission on MPG__ is due to the fact that car __transmission is correlated with weight__.
+
+We're going to form a nested sequence of models. This means that we're going to add certain variables to the model, such as __weight__ whereby the regressors of one model (__Trans__) are included in those of the next model.
+
+```{r}
+# Center weight variable
+cars  <- mutate(cars, Weight_centered = Weight-mean(Weight))
+# Build nested regression model step 2
+fit2  <- update(fit0, MPG ~ Trans + Weight_centered)
+# Compare regression coeficients
+coef(fit1); coef(fit2)
+```
+
+Adjusting for the weight of a car, the regression __coeficient__ (__fit2__) for __manual__ transmissions has now __changed in magnitude and direction__. Accounting for weight, cars with manual transmission seem to have __less MPG on average than automatic__ cars, although the difference is very marginal. The __intercept__ (coeficient) is the expected MPG of an __automatic__ car with an __average weight__ since the other covariate, __weight__, was centered to its mean before included in the model. Without centering the weight, the intercept would have been interpreted as expected MPG of an __automatic__ car with no weight, which is an unrealistic interpretation.
+
+```{r fig.height=3}
+# Draw boxplot
+ggplot(cars, aes(x = factor(Cyl), y = Weight)) + geom_boxplot() +
+      labs(title = "Boxplot 3", x = "Number of Cylinders", y = "Weight (in ths. lbs.)")
+```
+
+Since the transmission of a car seems to be correlated with weight, what variables is weight correlated with? Again... From a layman's point of view, it is suggested that __cars increase in weight the more cylinders their engines carry__. __Boxplot 3__ provides reason for this assumption.
+
+The __Cyl__ variable (number of cylinders) is therefore added to the model. Both number of cylinders and weight are centered so that the model intercept can be interpreted more realistically.
+
+```{r}
+# Center cylinder no. variable
+cars  <- mutate(cars, Cyl_centered = Cyl-mean(Cyl))
+# Build nested regression model step 3
+fit3  <- update(fit0, MPG ~ Trans + Weight_centered + Cyl_centered)
+# Compare regression coeficients
+coef(fit2);coef(fit3)
+```
+
+Adjusting for the number of cylinders and weight of a car, the regression coeficient for __manual__ transmissions has changed again in direction, although the effect magnitude is comparably marginal as was the effect of the previous model. Accounting for the other two regressor variables, average-weight cars with an average number of cylinders and a __manual transmission seem to yield slightly more MPG on average than automatic__ cars. The __intercept__ (coeficient), the expected MPG of an __automatic__ car with an average weight and an average number of cylinders, remains nearly the same.
+
+```{r fig.height=3}
+# Draw boxplot
+ggplot(cars, aes(x = factor(Cyl), y = Displ)) + geom_boxplot() +
+      labs(title = "Boxplot 4", x = "Number of Cylinders", y = "Displacement (in cubic inches)")
+# Compute correlation between weight and displacement of car
+cor(cars$Weight, cars$Displ)
+# Center displacement variable
+cars  <- mutate(cars, Displ_centered = Displ-mean(Displ))
+# Build nested regression model step 4
+fit4  <- update(fit0, MPG ~ Trans + Weight_centered + Cyl_centered + Displ_centered)
+# Compare regression coeficients
+coef(fit3); coef(fit4)
+
+```
+
+Let's add another regressor to the model: Displacement (__Displ__). This variable is measured in cubic inches and describes -- according to a layman's quick web search -- "the volume of an engine's cylinders, a general indicator of its size and power". That relates well to the last two regressors (__weight and number of cylinders__) that had been added to the model as seen on __boxplot 4__ and the correlation coeficient. The variable was centered as usual.
+
+Adjusting for the number of cylinders, their volume (displacement), and the overall weight of a car, the __regression coeficients__ (both intercept describing the __automatic__ reference group and the one for the _manual transmission_ factor level) have not changed significantly-- neither in direction, nor in magnitude. Neither did the coeficients of the covariates, __weight and number of cylinders__. Holding all aforementioned covariates constant, the new regressor (__Displ__) doesn't seem to have an impact at all on MPG since its coeficient is nearly zero.
+
+```{r}
+# Center horsepower variable
+cars  <- mutate(cars, HP_centered = HP-mean(HP))
+# Build nested regression model step 5
+fit5  <- update(fit0, MPG ~ Trans + Weight_centered + Cyl_centered + Displ_centered + HP_centered)
+# Compare regression coeficients
+coef(fit4); coef(fit5)
+```
+
+One could add more and more covariates to the model and determine how adjustment for other variables affects the impact of a transmission on mileage (MPG). For instance, __the more cylinders a car's engine has, the more horsepower it yields__. (My father-in-law taught me that actually quite straight-forward lesson. It hadn't appeared to me before.) Hence, we expect that horsepower has a reason to be part of the model, as well. Holding all other covariates constant, the new regressor (__HP__) doesn't seem to have an impact at all on MPG since its coeficient is nearly zero-- equivalent to the previously added regressor (__Displ__). 
+
+In general, the selection of covariates (their addition or removal) is a tricky endeavor. It depends heavily on how rich of a covariate space one wants to explore; the space of models explodes quickly as one adds interactions of variables and polynomial terms. We could have gone one and on until we eventually reach the basic multivariate regression model (fit0) that includes all regressors available. We could have gone beyond and investigate variable interactions. But for reasons of simplicity, we leave it with the current nested models and test them.
+
+```{r}
+# Compare nested models more holistically
+anova(fit1, fit2, fit3, fit4, fit5)
+```
+
+Including more regressors will reduce a model's __residual sum of squares (RSS)__, as seen in the __Analysis of Variance (ANOVA)__ table, by the __Sum of Sq.__ amounts.  When adding regressors, the reduction in residual sums of squares should be tested for significance above and beyond that of __reducing residual degrees of freedom (Res. Df)__. R's ANOVA function uses an __F-test (PR>F)__for this purpose.
+It appears that each model is a significant improvement on its predecessor until the addition of the __Displ__ variable in __model 4__ which is not significant and should therefore be removed from the model sequence. and the subsequent model 5 from our ling approach.
+
+```{r}
+# Update model
+fit4  <- update(fit0, MPG ~ Trans + Weight_centered + Cyl_centered + HP_centered)
+# Compare nested models more holistically
+anova(fit1, fit2, fit3, fit4)
+```
+
+We updated the nested models (__model 4__) and removed the _Displ_ regressor and re-ran an ANOVA.
+
+In a similar manner, the addition of the __horsepower (HP)__ variable, now in the __updated model 4 and formerly in model 5__, is not significant and should therefore be removed from the nested models, as well.
+That brings us back to step 3 in our model nesting and leaves us with __model 3__. Since the addition of __weight__ and number of cylinders (__Cyl__) __reduces the RSS significantly__ (see RSS, Sum of Sq. and F-test p-values w/ significance codes in ANOVA table), __model 3__ shall be the model to answer the overarching research question.
+
+```{r}
+# Describe the whole more holistically
+summary(fit3)
+# Compare R-squares
+summary(fit1)$r.squared
+# Describe average weight (in 1,000 lbs) and number of cylinders of sampled cars
+mean(cars$Weight);                        mean(cars$Cyl)
+```
+
+The model describes more than 80% of the total variation of a car's MPG as indicated by the __multiple and adjusted R-square__ (a.k.a. regression variation). Adding more regressors to a model always increases the R-squares. Our initial model (__fit1__) with __Trans__ being the only regressor explained a little more than a third of the __MPG__ variance.
+
+As seen in the coeficient table and previously interpreted, cars with a __manual transmission (TransManu)__ yield slightly more mileage compared to its reference group being cars with __automatic transmission (intercept)__ holding all other covariates fixed at their average measure (see above).
+The positive difference in mileage of cars with __manual vs. automatic transmission__ is very marginal described by the value of the __TransManu coeficient__ (less than 0.2 MPG). In addition, the effect is also __not significant indicated by the high p-value__.
+The coefficients in the table have __standard errors__ and follow a __t (value)__ distribution with n-p (number of cars, 32, minus number of regressors incl. the intercept, 4) __degrees of freedom__. Therefore, a t-interval hypothesis test of the estimated effect of a manual car compared to an automatic car can __quantify the uncertainty__ of our estimate.
+
+```{r}
+# Get a confidence interval for estimated MPG effect of car transmission
+summary(fit3)$coefficients[2,1] + c(-1, 1) * qt(.975, df = fit3$df) * summary(fit3)$coefficients[2, 2]
+```
+
+The computation of a confidence interval reveals that with 95% confidence, we estimate that a car with manual transmission can neither clearly increase nor decrease the MPG. The change in MPG ranges from -2.5 to 2.8 miles per gallon. In other words, we cannot confidently say what effect the transmission of car has on its mileage in MPG, if an effect at all.
+
+```{r}
+# Re-visit regression-coefficient table
+summary(fit3)$coef
+# Get a confidence interval for estimated MPG effect of weight
+summary(fit3)$coefficients[3,1] + c(-1, 1) * qt(.975, df = fit3$df) * summary(fit3)$coefficients[3, 2]
+# Get a confidence interval for estimated MPG effect of number of cylinders
+summary(fit3)$coefficients[4,1] + c(-1, 1) * qt(.975, df = fit3$df) * summary(fit3)$coefficients[4, 2]
+```
+
+However, what we can say with __strong statistical significance__ (due to p-values less than 1%) and __high confidence__ (95%), as seen in the re-visited table of coeficients and confidence-interval computation, is that
+- every additional 1,000 lbs. in car weight descreases its mileage on average by 3.1 MPG; with 95% confidence, we estimate that a car with additional 1,000 lbs in weight can decrease the MPG ranging from at least 1.3 and up to 5 miles per gallon;
+- every additional cylinder in the engine of a car descreases its mileage on average by 1.5 MPG; with 95% confidence, we estimate that a car with every additional engine cylinder can decrease the MPG of the car ranging from at least .6 up to 2.4 miles per gallon.
+
+That's being said with its __covariates held constant at an average number of cylinders, respecively average weight, and with an automatic transmission (since that's the reference group of the transmission variable).
+
+# Model Diagnostics
+```{r fig.height=4}
+# Draw diagnostic plots
+par(mfrow = c(2, 2)); plot(fit3)
+
+# Test residuals for normality
+shapiro.test(resid(fit3))
+```
+
+Let's take a look at some diagnostic measures and plots, more specifically at the (top-left) __residual plot__.
+Residuals and residual plots are useful for investigating poor model fit. Positive residuals are above the line, negative residuals are below. Residuals can be thought of as the outcome (MPG) with the linear association of the predictors (all regressors of the model) removed. Residual plots highlight poor model fit, respectively in our case, acceptable model fit considering that most of the residuals are close to the zero line.
+The (top-right) __Residual QQ plot__ investigates __normality of the errors__, an __assumption that's crucial to the ANOVA__ we conducted earlier. The standardized residuals align fairly close to the diagonal line / theoretical quatiles of a normal distribution. The __Shapiro-Wilk test for normality__ quantifies the observation from the plot and confirms the normal distribution of the model residuals. Model residuals are tested for normality to insure that the ANOVA applied.
+
+# Conclusions
+
+A nested regression modelling approach was applied to determine the effect of a car's transmission type to its MPG. Initially, a regression model with just the transmission type as its predictor suggested a positive effect on MPG. However, once more car features were gradually added to the sequence of models the initial transmission effect has faded away. It turned out that weight of a car and its number of engine cylinders are more impactful on a car's MPG. Adjusting for other car features, one can say that neither an automatic or manual transmission is better for MPG. The MPG difference between automatic and manual transmissions is close to zero and can range slightly above or below zero depending on other variables included in the regression model.
+
+For future analyses, it is suggested that instead of adding more and more variables to a nested sequence of models, one should start with the basic regression model (including all available regressors) and gradually removing car features that don't show an impact on MPG.

@@ -1,0 +1,169 @@
+---
+title: "Regression analysis"
+author: "Dejan Pljevljakusic"
+date: "Sunday, April 03, 2016"
+output:
+  pdf_document:
+    fig_caption: yes
+---
+
+## Executive summary
+Observed average fuel consumption for *automatic* transmission is about **17.15 mpg**, while for the *manual* transmission is about **24.39 mpg**. When we fit simple regression model `mpg ~ am` we get the same results. If we try to fit some other multiple regression models both intercept and slope are changed. In our first model selection we have choose **Model 16** `mpg ~ am + hp + qsec + vs + gear + carb` as the most promising one, but when we have applied 'Step-wise model search' we get **Model S** which was simple `mpg ~ am + wt + qsec`. We finally choose to stick with this one and its regression coefficients tell us that expected fuel consumption in cars with automatic transmission is about **9.61 mpg**, and if you change your vehicle with some other that has manual transmission you can expect to drive about **2.93 miles** more for each gallon of fuel. Residuals for this model was normally distributed, what means that all error values are random.
+
+
+## Synopsis
+Since I am a journalist of *Motor Trend* magazine my task is to explore relationship between a set of variables and fuel consumption in data set of 32 motor vehicles. The main aim of this research is to distinguish differences between automatic and manual transmission regarding miles per gallon (mpg) variable and to address the question if one is better than other. All tables and plots are presented in appendix of this document.
+
+## Exploratory data analysis
+```{r, setup, echo=FALSE, message=FALSE, warning=FALSE}
+library(car)
+library(knitr)
+```
+Load the data set
+```{r}
+data(mtcars)
+```
+From `?mtcars` we can find a basic information about the `mtcars` data set. Variable that responses to type of transmission is marked as
+`am` (0 = automatic, 1 = manual), while variable that responses to fuel consumption is marked as `mpg` (Miles/(US) gallon). Now, let's explore what would be the mean fuel consumption values for each type of transmission (Table 1).
+```{r, echo=FALSE}
+am0 <- mean(mtcars$mpg[mtcars$am == 0])
+am1 <- mean(mtcars$mpg[mtcars$am == 1])
+trans <- c("automatic", "manual")
+mean_am <- c(am0, am1)
+mean_am <- round(mean_am, 2)
+value <- c(0, 1)
+df <- cbind(trans, value, mean_am)
+colnames(df) <- c("Transmission type", "Value", "Mean (mpg)")
+```
+
+At this point we can observe that average fuel consumption for *automatic* transmission is about **17.15 mpg**, while for the *manual* transmission is about **24.39 mpg** (Table 1). Now, let's explore if any variables in this data set other then transmission type is correlated with fuel consumption (**mpg** variable).
+```{r, echo=FALSE}
+cor_mpg <- cor(as.matrix(mtcars[,9]), as.matrix(mtcars[,-c(1,9)]))
+```
+From the results presented in Table 2 we can conclude that only `cyl` `disp`, `drat` `wt` and `gear` variables are in some extent correlated to the variable `am`. 
+
+## Model selection
+Since I was asked to check if an automatic or manual transmission type is better for fuel consumption, first I will set basic linear regression model with only `am` variable included as a predictor of `mpg` variable (outcome).
+```{r}
+fit0 <- lm(mpg ~ am, data = mtcars)
+```
+Summary of coefficients for simple linear regression is presented in Table 3, while scatterplot of observed relationship, together with fitted linear regression line (solid red line), is shown in Figure 1.
+From this results we can conclude that if vehicle have *automatic* transmission fuel consumption of about **17.15 mpg** is expected, while for changing transmission type to *manual* **7.25 miles** more per gallon is expected. In other words for one gallon of fuel vehicles with *automatic* transmission can reach about 17.15 miles, while vehicles with *manual* transmission can reach about 24.39 miles. These values are the same as calculated means of fuel consumption for each transmission type separately (Table 1).
+The null hypothesis is that there is no linear relationship between predictor and response: 
+
+H~0~: $\beta_{1}$ = $0$
+
+H~a~: $\beta_{1}$ $\neq$ $0$
+
+Since P-value of the slope (Table 3) is less than our desired type I error rate (P < 0.05), we can reject null hypothesis and state that transmission type had statically significant influence on fuel consumption. 
+
+Now, let's try to fit some other possible linear models that include other variables of the same data set, which could influence the impact of transmission type on fuel consumption. For this purpose I have splited this screening into two parts. First, I have examined what kind of influence on `am` variable's regression coefficient had all other potential regressors separately (Table 4). Second, I will choose regressors from the models where P-value is below our desired probability threshold for null hypothesis rejection (P < 0.05). These models are **4**, **7**, **8**, **9** and **10**, where additional regressors were `hp`, `vs`, `qsec`, `gear` and `carb`, respectively. Based on this information 7 new regression models are proposed in Table 5. For each of these models (**11**-**16**) P-value of the slope was less than 0.05, and therefore we can reject null hypothesis referring thereby that there is statistically significant relationship between predictor and outcome. 
+
+I would choose **Model 16** as the most promising since it includes all predictor variables from the previous screening, which influenced `am` variable in the way that they do not violate relationship between fuel consumption and transmission type. If we check difference between simple linear regression model (**Model 1**) and multivariable regression model (**Model 16**) we would get result indicating that it is statistically very significant (Table 6). That information give us certainty that additional regressors included in the new model significantly contribute in the influence of transmission type on the fuel consumption. Now, if we take a closer look on regression coefficients produced by our new model (**Model 16**), we can see that intercept has slightly increased (from **17.14 mpg** to **19.02 mpg**), while slope for the transmission type has decreased (from **7.25 mpg** to **3.97 mpg**). Regression line of Model 16 is presented as dashed blue line in Figure 1.
+
+Nevertheless, if we apply 'Step-wise model search' with the `step` function for all variables in `mtcars` data set
+```{r, results='hide'}
+fit_s <- lm(mpg ~ am + cyl + disp + hp + drat + wt + qsec + vs + gear + carb, data = mtcars)
+step(fit, k = log(nrow(mtcars)))
+```
+we get result that the best model (**Model S**) that captures most of the variability in the data is simply `mpg ~ am + wt + qsec`. Regression line of Model S is presented as dash-dot green line in Figure 2. We will stick to this model and its regression coefficients are shown in Table 6. In other words after introducing new regressors into model our conclusion could be that expected fuel consumption in cars with automatic transmission is about **9.61 mpg**, and if you change your vehicle with some other that has manual transmission you can expect to drive about **2.93 miles** more for each gallon of fuel. If we observe residuals distribution for **Model S** we can conclude that it follows normal distribution curve (Figure 3), what is desirable feature and give us information that error values are random.
+
+
+$$ $$
+
+$$ $$
+
+## Appendix
+```{r, echo=FALSE}
+kable(df, caption = "Mean values of fuel consumption for each type of transmission")
+kable(round(cor_mpg, 3), caption = "Correlation coefficients of all variables in 'mtcars' dataset (except 'mpg') with 'am' varaible")
+```
+
+
+```{r, echo=FALSE}
+fit0_coef <- summary(fit0)$coef
+kable(fit0_coef, caption="Regression coefficients of the basic model with only 'am' variable included as a predictor")
+```
+
+
+```{r, echo=FALSE, message = FALSE, results = 'asis'}
+fit0 <- lm(mpg ~ am, data = mtcars)
+fit1 <- lm(mpg ~ am + cyl, data = mtcars)
+fit2 <- lm(mpg ~ am + disp, data = mtcars)
+fit3 <- lm(mpg ~ am + hp, data = mtcars)
+fit4 <- lm(mpg ~ am + wt, data = mtcars)
+fit5 <- lm(mpg ~ am + drat, data = mtcars)
+fit6 <- lm(mpg ~ am + qsec, data = mtcars)
+fit7 <- lm(mpg ~ am + vs, data = mtcars)
+fit8 <- lm(mpg ~ am + gear, data = mtcars)
+fit9 <- lm(mpg ~ am + carb, data = mtcars)
+
+multi1 <- rbind(summary(fit0)$coef[2,],
+      summary(fit1)$coef[2,],
+      summary(fit2)$coef[2,],
+      summary(fit3)$coef[2,],
+      summary(fit4)$coef[2,],
+      summary(fit5)$coef[2,],
+      summary(fit6)$coef[2,],
+      summary(fit7)$coef[2,],
+      summary(fit8)$coef[2,],
+      summary(fit9)$coef[2,])
+
+options(scipen=999)
+attr <- "Model  1: mpg ~ am\nModel  2: mpg ~ am + cyl\nModel  3: mpg ~ am + disp\nModel  4: mpg ~ am + hp\nModel  5: mpg ~ am + wt\nModel  6: mpg ~ am + drat\nModel  7: mpg ~ am + qsec\nModel  8: mpg ~ am + vs\nModel  9: mpg ~ am + gear\nModel 10: mpg ~ am + carb"
+attr <- unlist(strsplit(attr, "\n"))
+multi1 <- round(multi1, 4)
+
+tbl <- cbind(attr, multi1)
+colnames(tbl)[1] <- c("Model")
+
+kable(tbl, caption="Regression coeficients for 'am' variable in linear models with addtitional regressor")
+
+fit10 <- lm(mpg ~ am + hp + qsec, data = mtcars)
+fit11 <- lm(mpg ~ am + hp + vs, data = mtcars)
+fit12 <- lm(mpg ~ am + hp + carb, data = mtcars)
+fit13 <- lm(mpg ~ am + hp + qsec + vs, data = mtcars)
+fit14 <- lm(mpg ~ am + hp + qsec + vs + gear, data = mtcars)
+fit15 <- lm(mpg ~ am + hp + qsec + vs + gear + carb, data = mtcars)
+
+fit_new <- lm(mpg ~ am + wt + qsec, data = mtcars)
+
+multi2 <- rbind(summary(fit10)$coef[2,],
+      summary(fit11)$coef[2,],
+      summary(fit12)$coef[2,],
+      summary(fit13)$coef[2,],
+      summary(fit14)$coef[2,],
+      summary(fit15)$coef[2,])
+
+attr2 <- "Model 11: mpg ~ am + hp + qsec\nModel 12: mpg ~ am + hp + vs\nModel 13: mpg ~ am + hp + carb\nModel 14: mpg ~ am + hp + qsec + vs\nModel 15: mpg ~ am + hp + qsec + vs + gear\nModel 16: mpg ~ am + hp + qsec + vs + gear + carb"
+
+attr2 <- unlist(strsplit(attr2, "\n"))
+multi2 <- round(multi2, 4)
+
+tbl2 <- cbind(attr2, multi2)
+colnames(tbl2)[1] <- c("Model")
+
+kable(tbl2, caption="Regression coeficients for 'am' variable in linear models with addtitional multiple regressors")
+
+kable(anova(fit0, fit15), caption = "Testing difference between Model 1 and Model 16 (ANOVA)")
+
+kable(summary(fit_new)$coef, caption = "Regression coeficients for Model S")
+```
+
+```{r, echo=FALSE, fig.height=4, fig.width=4, fig.cap='Relationship between fuel consumption and transmission type', message = FALSE, warning=FALSE}
+
+plot(mpg ~ am, data = mtcars, pch = 5, cex = 0.8,
+     xlab = "Transmission type", ylab = "Fuel consumption [mpg]", ylim = c(5,35))
+abline(fit0, col="red")
+abline(fit15, col="blue", lty = 2)
+abline(fit_new, col="green", lty = 4)
+legend("topleft", legend=c("Model 1", "Model 16", "Model S"),
+       col=c("red", "blue", "green"), lty=c(1,2,4), cex=0.8)
+```
+
+```{r, echo=FALSE, fig.height=4, fig.width=4, fig.cap='QQ Plot of residuals from Model S', message = FALSE, warning=FALSE}
+fit.res <- resid(fit_new) 
+qqnorm(fit.res)
+qqline(fit.res)
+
+```
