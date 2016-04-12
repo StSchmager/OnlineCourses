@@ -1,0 +1,154 @@
+---
+title: 'R Programming Assignment 1: Air Pollution'
+author: "Stefan Schmager"
+date: "Thursday, September 11, 2014"
+output: html_document
+--- 
+---
+##Introduction   
+For this first programming assignment you will write three functions that are meant to interact with dataset that accompanies this assignment. The dataset is contained in a zip file **specdata.zip** that you can download from the Coursera web site.   
+   
+##Data   
+   
+The zip file containing the data can be downloaded here:
+
+* [specdata.zip](https://d396qusza40orc.cloudfront.net/rprog%2Fdata%2Fspecdata.zip) [2.4MB]
+
+The zip file contains 332 comma-separated-value (CSV) files containing pollution monitoring data for fine particulate matter (PM) air pollution at 332 locations in the United States. Each file contains data from a single monitor and the ID number for each monitor is contained in the file name. For example, data for monitor 200 is contained in the file "200.csv". Each file contains three variables:
+
+* Date: the date of the observation in YYYY-MM-DD format (year-month-day)
+
+* sulfate: the level of sulfate PM in the air on that date (measured in micrograms per cubic meter)
+
+* nitrate: the level of nitrate PM in the air on that date (measured in micrograms per cubic meter)   
+
+For this programming assignment you will need to unzip this file and create the directory 'specdata'. Once you have unzipped the zip file, **do not** make any modifications to the files in the 'specdata' directory. In each file you'll notice that there are many days where either sulfate or nitrate (or both) are missing (coded as NA). This is common with air pollution monitoring data in the United States.
+   
+##Part 1   
+Write a function named 'pollutantmean' that calculates the mean of a pollutant (sulfate or nitrate) across a specified list of monitors. The function 'pollutantmean' takes three arguments: **'directory'** (a character vector of length 1 indicating the location of the CSV files), **'pollutant'** (a character vector of length 1 indicating the name of the pollutant for which we will calculate the mean; either "sulfate" or "nitrate"), and **'id'** (an integer vector indicating the monitor ID numbers to be used). Given a vector monitor ID numbers, 'pollutantmean' reads that monitors' particulate matter data from the directory specified in the 'directory' argument and returns the mean of the pollutant across all of the monitors, ignoring any missing values coded as NA. A prototype of the function is as follows
+```{r}
+pollutantmean <- function(directory, pollutant, id = 1:332) {
+     
+     setwd("~/R/Coursera/R Programming/Assignments/1_Air_Pollution")
+
+     files_list <- list.files(directory, full.names=TRUE)
+     files_number <- length(files_list)
+     dat <- data.frame()
+        for (i in 1:files_number) {
+                dat <- rbind(dat, read.csv(files_list[i]))
+        }
+     dat_subset <- subset(dat, ID %in% c( id ), select = pollutant)
+
+     mean(dat_subset[,pollutant], na.rm = TRUE)                            
+}
+```
+
+You can see some [example output from this function](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fpollutantmean-demo.html).**Test** the function by running it according to the example output.
+
+```{r}
+pollutantmean("specdata", "sulfate", 1:10)
+pollutantmean("specdata", "nitrate", 70:72)
+pollutantmean("specdata", "nitrate", 23)
+```
+
+The function that you write should be able to match this output. Please save your code to a file named **pollutantmean.R**.
+
+##Part 2
+Write a function that reads a **'directory'** full of files (a character vector of length 1 indicating the location of the CSV files) as well as an **'id'** (an integer vector indicating the monitor ID numbers to be used) and reports the number of completely observed cases in each data file. The function should return a data frame where the first column is the name of the file ('id') and the second column is the number of complete cases/observations ('nobs'). A prototype of this function follows
+```{r}
+complete <- function(directory, id = 1:332) {
+
+     setwd("~/R/Coursera/R Programming/Assignments/1_Air_Pollution")
+     
+     files_list <- list.files(directory, full.names=TRUE)
+     files_number <- length(files_list)
+     dat <- data.frame()
+     for (i in 1:files_number) {
+          dat <- rbind(dat, read.csv(files_list[i]))
+     }
+     
+     nobs_s <- complete.cases(dat$sulfate)
+     nobs_n <- complete.cases(dat$nitrate)
+     nobs <- ifelse(nobs_s == T & nobs_n == T, 1, 0)
+     as.integer(nobs)
+     nobs_sum <- nobs_s + nobs_n
+     nobs_test <- ifelse(nobs_sum > 1, 1, 0)
+     
+     dat2 <- cbind (dat, nobs_s, nobs_n, nobs, nobs_test, nobs_sum)
+     
+     dat3 <-  subset(dat2, select = c(ID, nobs))
+     
+     dat4 <- melt(dat3, id.vars = "ID", measure.vars = "nobs")
+     dat5 <- cast(dat4, ID~variable, sum)
+     
+     dat_result <- subset(dat5, ID %in% 30:25)
+     dat_result
+}
+```
+
+You can see some [example output from this function](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fcomplete-demo.html). The function that you write should be able to match this output. 
+
+```{r}
+complete("specdata", c(2, 4, 8, 10, 12))
+complete("specdata", 30:25)
+complete("specdata", 3)
+```
+
+
+Please save your code to a file named **complete.R**. To run the submit script for this part, make sure your working directory has the file **complete.R** in it.
+
+##Part 3
+Write a function that takes a **directory** of data files (a character vector of length 1 indicating the location of the CSV files) and a *threshold* (a numeric vector of length 1 indicating the number of completely observed observations (on all variables) required to compute the correlation between nitrate and sulfate; the default is 0) for complete cases and calculates the correlation between sulfate and nitrate for monitor locations where the number of completely observed cases (on all variables) is greater than the threshold.
+The function should return a numeric vector of correlations for the monitors that meet the threshold requirement. If no monitors meet the threshold requirement, then the function should return a numeric vector of length 0. A prototype of this function follows
+```{r}
+corr <- function(directory, threshold = 0) {
+
+     setwd("~/R/Coursera/R Programming/Assignments/1_Air_Pollution")
+     
+     files_list <- list.files(directory, full.names=TRUE)
+     files_number <- length(files_list)
+     dat <- data.frame()
+     for (i in 1:files_number) {
+          dat <- rbind(dat, read.csv(files_list[i]))
+     }
+  
+     ### Copied & pasted from Part 2
+     
+     nobs_s <- complete.cases(dat$sulfate)
+     nobs_n <- complete.cases(dat$nitrate)
+     nobs <- ifelse(nobs_s == T & nobs_n == T, 1, 0)
+     as.integer(nobs)
+     nobs_sum <- nobs_s + nobs_n
+     nobs_test <- ifelse(nobs_sum > 1, 1, 0)
+     
+     dat2 <- cbind (dat, nobs_s, nobs_n, nobs, nobs_test, nobs_sum)
+     
+     dat3 <-  subset(dat2, select = c(ID, nobs))
+     
+     dat4 <- melt(dat3, id.vars = "ID", measure.vars = "nobs")
+     dat5 <- cast(dat4, ID~variable, sum)
+
+     ###################################################################
+     
+     cr <- data.frame()
+     for (i in 1:max(dat$ID)) {
+          dat_sulfate <- unlist(subset(dat, ID == i, select = sulfate))
+          dat_nitrate <- unlist(subset(dat, ID == i, select = nitrate))
+          cr[i, 1] <- cor(x = dat_sulfate, y = dat_nitrate, use = "p")
+     }
+     colnames(cr) <- "Correlation"
+     crnobs <- cbind(dat5, cr)
+     
+     result <- vector()
+     
+     for (i in 1:max(crnobs$ID)) {
+     if (crnobs$nobs[i] > threshold) {result[i] <- crnobs$Correlation[i]} 
+     }
+     
+     result[!is.na(result)]
+     }
+```
+
+For this function you will need to use the 'cor' function in R which calculates the correlation between two vectors. Please read the help page for this function via '?cor' and make sure that you know how to use it.
+
+You can see some [example output from this function](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fcorr-demo.html). The function that you write should be able to match this output. Please save your code to a file named **corr.R**. To run the submit script for this part, make sure your working directory has the file **corr.R** in it.
