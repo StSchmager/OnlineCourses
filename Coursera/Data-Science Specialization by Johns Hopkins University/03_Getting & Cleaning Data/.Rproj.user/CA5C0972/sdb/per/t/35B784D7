@@ -1,0 +1,17 @@
+{
+    "contents" : "# Read and subset raw data\nsetwd(\"C:/Users/Stefan/Google Drive/Projects/2 ZIP Code Analysis/1 Raw Data/Rewards Customers\")\nfile <- list.files()\ndat <- read.csv(file, colClasses = \"character\")\ndat <- subset(dat, select = c(CardNumber, PostalCode, CreationDate))\n\n# Variable types for additional columns (ZIP-code data type to be determined)\ndat$CardNumber <- factor(as.character(dat$CardNumber))\ndat$CreationDate <- as.Date(dat$CreationDate, \"%m/%d/%Y %I:%M:%S %p\")\n\n# Original ZIP codes are transformed\ndat$PostalCode_trans <- gsub(\"o\", \"0\", dat$PostalCode, ignore.case = T) # typos are corrected (letters o or O replaced by number 0)\ndat$PostalCode_trans <- substr(dat$PostalCode_trans, 1, 5) # ZIP codes were cut: not more than 5 digits\ndat$PostalCodeWidth <- nchar(dat$PostalCode_trans)\ndat$PostalCode_trans[dat$PostalCodeWidth != 5] <- NA # if not exactly / less than 5 digits: NA (invalid ZIP code)\n\n# Transformed ZIP codes are converted into integer (non-numerical values are coerced to NAs), then factors\ndat$PostalCode_int <- as.integer(dat$PostalCode_trans)\ndat$PostalCode_fac <- factor(as.character(dat$PostalCode_int))\n\n# NA ZIP code is signified by value 0\ndat$PostalCode_fac[is.na(dat$PostalCode_fac)] <- 0\n\n# Frequency table is built and raw data is summarized/condensed\ndat2 <- as.data.frame(table(dat$PostalCode_fac))\ncolnames(dat2) <- c(\"ZIP_Code\", \"Customers\")\n\ndat2 <- cbind(dat2, Customers_Percentage = prop.table(as.matrix(dat2$Customers), 2))\ndat2$Customers_Percentage <- dat2$Customers_Percentage*100\n\n# Data is saved\nsetwd(\"C:/Users/Stefan/Google Drive/Projects/2 ZIP Code Analysis/2 Processed Data\")\nwrite.csv(dat2, \"2 Processed Data - ZIP Codes (Rewards Customers).csv\", row.names = F)\n\n",
+    "created" : 1421692743857.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1927813541",
+    "id" : "35B784D7",
+    "lastKnownWriteTime" : 1421699311,
+    "path" : "C:/Users/Stefan/Google Drive/Projects/2 ZIP Code Analysis/2 Processed Data/1 DP - ZIP Codes (Rewards Customers).R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 0,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

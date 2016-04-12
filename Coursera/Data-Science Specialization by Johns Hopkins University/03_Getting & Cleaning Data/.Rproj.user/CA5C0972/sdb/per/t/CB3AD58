@@ -1,0 +1,23 @@
+{
+    "contents" : "",
+    "created" : 1421782466132.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CB3AD58",
+    "lastKnownWriteTime" : 842556979,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "Visits_Percentage",
+        "contentUrl" : "content?title=Visits_Percentage&file=97ec2743a97d4d6c82f53f827a4f9ff8.htm",
+        "displayedObservations" : 1000,
+        "displayedVariables" : 10,
+        "totalObservations" : 3882,
+        "variables" : 10
+    },
+    "relative_order" : 0,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

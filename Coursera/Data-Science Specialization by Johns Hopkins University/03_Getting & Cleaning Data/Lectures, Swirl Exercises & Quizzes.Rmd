@@ -1,0 +1,470 @@
+---
+title: "Getting Data - Lectures & Quizzes"
+author: "Stefan Schmager"
+date: "Saturday, November 08, 2014"
+output: html_document
+---
+## Swirl
+
+```{r}
+library(swirl)
+install_from_swirl("Getting and Cleaning Data")
+swirl()
+```
+
+
+## Week 1
+
+#Lectures
+
+Downloading Files
+```{r}
+getwd()
+setwd()
+list.files()
+
+file.exists("directoryName")
+dir.create("directoryName")
+if (!file.exists("data")) {dir.create("data")}
+download.file()
+date()
+read.csv
+```
+
+Reading Local Flat Files
+```{r}
+read.table()
+read.csv()
+read.csv2()
+```
+
+Reading Excel files
+```{r}
+library(xlsx)
+library(XLConnect)
+read.xlsx()
+read.xlsx2() #faster than above
+write.xlsx
+```
+
+Reading XML
+```{r}
+library(XML)
+xmlTreeParse()
+htmlTreeParse()
+xmlRoot()
+xmlName()
+names()
+rootNode #entire document or...
+rootNode[1] #indexing special elements
+xmlsApply() #looping a function through an object
+xpathSApply()
+```
+
+Reading JSON
+```{r}
+library(jsonlite)
+fromJSON()
+toJSON()
+
+names()
+```
+
+Using data.table (inherets from data.frame, but is much faster in many ways)
+```{r}
+library(data.table)
+tables()
+```
+
+#Quiz
+
+```{r}
+setwd("C:/Users/Stefan/Google Drive/Coursera/03_GettingData")
+download.file(
+      "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv",
+      "data1.csv")
+data1 <- read.csv("data1.csv")
+sum(data1$VAL==24, na.rm=TRUE)
+
+download.file( url = "http://www.gsa.gov/dg/pbs/DATA.gov_NGAP.xlsx", destfile = "getdata-data-DATA.gov_NGAP.xlsx")
+library(xlsx)
+# read rows 18-23 and columns 7-15
+dat <- read.xlsx2(file = "DATA.gov_NGAP.xlsx", sheetIndex = 1, colIndex = c(7:15), startRow=18, endRow=23, colClasses = c(rep("numeric", 8)))
+sum(dat$Zip*dat$Ext, na.rm = TRUE) 
+
+download.file(url = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml", destfile = "restaurants.xml")
+library(XML)
+data2 <- xmlTreeParse("restaurants.xml",useInternal=TRUE)
+rootNode <- xmlRoot(data2)
+xmlName(rootNode)
+zipcode <- xpathSApply(rootNode,"//zipcode",xmlValue)
+length(zipcode[zipcode==21231])
+
+download.file(url = "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv", destfile = "data2.csv")
+data2 <- read.csv("data2.csv")
+library(data.table)
+DT <- fread("data2.csv")
+system.time(tapply(DT$pwgtp15, DT$SEX, mean))
+system.time(sapply(split(DT$pwgtp15,DT$SEX),mean))
+system.time(DT[,mean(pwgtp15), by=SEX])
+system.time(rowMeans(DT)[DT$SEX==1])
+system.time(rowMeans(DT)[DT$SEX==2])
+system.time(mean(DT$pwgtp15,by=DT$SEX))
+system.time(mean(DT[DT$SEX==1,]$pwgtp15))
+system.time(mean(DT[DT$SEX==2,]$pwgtp15))
+
+# solution: DT[...]
+```
+
+## Week 2
+
+# Lectures
+
+Reading mySQL
+```{r}
+dbConnect()
+dbListTables()
+dbListFields()
+dbReadTable()
+dbGetQuery()
+dbSendQuery()
+dbClearResult()
+dbDisconnect()
+
+fetch()
+quantile()
+
+```
+
+Reading from HDF5
+```{r}
+
+```
+
+
+Reading from The Web
+```{r}
+url()
+readLines()
+close()
+
+library(xml)
+htmlTreeParse()
+xpathSApply()
+
+library(httr)
+GET()
+authenticate()
+content()
+htmlParse()
+
+names()
+handle()
+```
+
+Getting data from APIs
+
+```{r}
+library(httr)
+oauth_app()
+sign_oauth1.0()
+GET()
+content()
+library(jsonlite)
+fromJSON()
+```
+
+Reading from other sources
+
+```{r}
+file()
+url()
+gzfile()
+bzfile()
+?connection
+read.spss
+```
+
+
+# Quiz
+
+```{r}
+#Question 1
+
+#Question 2
+setwd("C:/Users/Stefan/Google Drive/Coursera/03_GettingData")
+download.file(
+      "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv",
+      "AmericanCommunitySurvey_data.csv")
+acs <- read.csv("AmericanCommunitySurvey_data.csv")
+library(sqldf)
+
+Q2_answer1 <- sqldf("select pwgtp1 from acs")
+Q2_answer2 <- sqldf("select * from acs")
+Q2_answer3 <- sqldf("select * from acs where AGEP < 50 and pwgtp1")
+Q2_answer4 <- sqldf("select pwgtp1 from acs where AGEP < 50")
+
+#Question 3
+Q3_answer1 <- sqldf("select unique * from acs")
+Q3_answer2 <- sqldf("select distinct AGEP from acs")
+Q3_answer3 <- sqldf("select AGEP where unique from acs")
+Q3_answer4 <- sqldf("select distinct pwgtp1 from acs")
+
+#Question 4
+
+con <- url("http://biostat.jhsph.edu/~jleek/contact.html")
+htmlCode <- readLines(con)
+close(con)
+htmlCode
+x <- c(htmlCode[10], htmlCode[20], htmlCode[30], htmlCode[100])
+nchar(x)
+
+#Question 5
+setwd("C:/Users/Stefan/Google Drive/Coursera/03_GettingData")
+download.file(
+      "https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for",
+      "data.for")
+forData <- read.fwf("data.for", c(1, 9, 5, 4, 1, 3, 5, 4, 1, 3, 5, 4, 1, 3, 5, 4, 1, 3), skip = 4)
+sum(forData$V8)
+```
+
+## Week 3
+
+# Lectures
+
+Subsetting and Sorting
+```{r}
+which() # dealing with missing values (does not display them)
+sort()
+X[order(X$var1, X$var2),] # order rows by values of variable 1 (or more variables)
+
+library(plyr)
+arrange() # comparable to order()
+
+cbind()
+rbind()
+```
+
+Summarizing Data
+```{r}
+head()
+tail()
+summary()
+str()
+quantile(, probs = c())
+table(x$var1, useNA = "ifany") # frequency table
+table(x$var1, x$var2) # two-dimensional
+
+# check for missing values
+sum(is.na())
+any(is.na())
+all(x$var1 > 0)
+colSums(is.na(x))
+all(colSums(is.na(x)) == 0)
+
+# values with specific characteristics
+table(restData$zipCode %in% c("21212","21213")) 
+restData[restData$zipCode %in% c("21212","21213"),] # subset according to these values
+
+xtabs() # cross tabs
+ftable() # flat tables
+
+object.size() #size of data set (by default in bytes)
+print(object.size(), units = "Mb")
+```
+
+Creating new variables
+```{r}
+seq() # creating sequences to index data set
+ifelse() # binary vars.
+
+# cutting numeric vars into categorical vars
+cut()
+library(Hmisc)
+cut2()
+# cutting produces factor vars
+
+factor() # factor vars
+class()
+relevel()
+as.numeric(factor())
+
+library(Hmisc); library(plyr)
+mutate()
+
+#common transforms
+abs(x) #absolute value
+sqrt(x) #square root
+ceiling(x) c#eiling(3.475) is 4
+floor(x) #floor(3.475) is 3
+round(x,digits=n) #round(3.475,digits=2) is 3.48
+signif(x,digits=n) #signif(3.475,digits=2) is 3.5
+cos(x); sin(x) #etc.
+log(x) #natural logarithm
+log2(x); log10(x) #other common logs
+exp(x) #exponentiating x
+```
+
+Reshaping data
+```{r}
+melt()
+dcast()
+acast()
+arrange()
+mutate()
+
+tapply()
+split()
+lapply()
+unlist()
+sapply()
+ddply()
+```
+
+Merging data
+```{r}
+names()
+intersect(names(x), names(y))
+merge()
+
+library(plyr)
+arrange(join(),)
+join_all(list())
+```
+
+#Quiz
+
+```{r}
+# Question 1
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv",
+              "idaho_housing.csv")
+idaho <- read.csv("idaho_housing.csv")
+
+agricultureLogical <- ifelse(idaho$ACR == 3 & idaho$AGS == 6, T, F)
+which(agricultureLogical)[1:3]
+
+# Question 2
+library(jpeg)
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fjeff.jpg",
+              mode = "wb",
+              "instructor.jpg")
+image <- readJPEG("instructor.jpg", native = TRUE)
+quantile(image, probs = c(0.3, .80))
+
+
+# Question 3
+setwd("C:/Users/Stefan/Google Drive/Coursera/03_GettingData")
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv",
+              "gdp.csv"); gdp <- read.csv("gdp.csv", na.strings = c("NA",""))
+gdp <- gdp[complete.cases(gdp$X),]
+
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv",
+              "edu.csv"); edu <- read.csv("edu.csv")
+
+gdp_edu <- merge(gdp, edu, by.x = "X", by.y = "CountryCode")
+library(plyr)
+gdp_edu$Gross.domestic.product.2012 <- as.numeric(as.character(gdp_edu$Gross.domestic.product.2012))
+gdp_edu <- gdp_edu[with(gdp_edu, order(Gross.domestic.product.2012, decreasing = T)), ]
+
+# Question 4
+
+mean(gdp_edu[gdp_edu$Income.Group == "High income: nonOECD",]$Gross.domestic.product.2012, na.rm = T)
+mean(gdp_edu[gdp_edu$Income.Group == "High income: OECD",]$Gross.domestic.product.2012, na.rm = T)
+
+# Question 5
+gdp_cut <- cut(gdp_edu$Gross.domestic.product.2012, quantile(gdp_edu$Gross.domestic.product.2012, seq(0, 1, 0.2), labels = F, na.rm = T))
+gdp_edu <- cbind(gdp_edu, gdp_cut)
+table(gdp_edu$Income.Group, gdp_edu$gdp_cut)
+```
+
+
+## Week 4
+
+# Lectures
+
+Editing text variables
+```{r}
+tolower() # makes text lower-cased
+strsplit()
+sub() # substitute character (replaces just the first character)
+gsub() # (replaces all characters)
+grep() # finding values (gives locations)
+grepl() # (gives logical values)
+nchar()
+substr()
+paste()
+paste0()
+```
+
+Regular expressions
+```{r}
+# metacharacters:
+^... # start of the line
+...$ # end of the line
+[] [-] # certain letters or range of letters
+. # refers to any character
+| # combine expressions (in the "or" sense)
+? # expression is optional
+\. # escapes the metacharacters and treats one as a literal character (e.g. dot is not the expression mentioned above, but a simple dot)
+* + # repitition
+{}
+# above mentioned metacharacters can be combined
+```
+
+Working with Dates
+```{r}
+date()
+Sys.Date()
+format()
+weekdays()
+months()
+julian()
+library(lubridate)
+ymd()
+mdy(); dmy()
+ymd_hms(, tz=) # set timezone
+?Sys.timezone
+wday()
+?POSIXlt; ?POSIXct
+```
+
+# Quiz
+
+```{r}
+# Question 1
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv",
+              "idaho_housing.csv")
+idaho <- read.csv("idaho_housing.csv")
+
+strsplit(names(idaho), "wgtp")[123]
+
+# Question 2
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv",
+              "gdp.csv"); gdp <- read.csv("gdp.csv")
+gdp$X.3 <- as.numeric(gsub(",", "", gdp$X.3,))
+mean(gdp$X.3[1:219], na.rm = T)
+
+# Question 3
+grep("^United", gdp$X.2)
+
+# Question 4
+setwd("C:/Users/Stefan/Google Drive/Coursera/03_GettingData")
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv",
+              "gdp.csv"); gdp <- read.csv("gdp.csv", na.strings = c("NA",""))
+gdp <- gdp[complete.cases(gdp$X),]
+
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv",
+              "edu.csv"); edu <- read.csv("edu.csv")
+
+gdp_edu <- merge(gdp, edu, by.x = "X", by.y = "CountryCode")
+
+table(grepl("June",gdp_edu$Special.Notes) & grepl("^Fiscal",gdp_edu$Special.Notes))
+
+# Question 5
+library(quantmod)
+amzn = getSymbols("AMZN",auto.assign=FALSE)
+sampleTimes = index(amzn)
+class(sampleTimes)
+table(grepl("^2012",sampleTimes))
+```
+

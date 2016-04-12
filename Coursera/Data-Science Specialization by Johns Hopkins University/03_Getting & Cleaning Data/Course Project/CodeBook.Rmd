@@ -1,0 +1,17 @@
+## Data
+The data was downloaded as a .zip file from the source https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip and then unzipped. The result was the main folder named "UCI HAR Dataset" that contained two sub folders ("test", "train") and a couple of txt. files (for example, the activity labels and features) that were used in the run_analysis.R script
+
+## Work and transformation performed in the script
+0) Reads the training and test data sets that were contained in various files in the subfolders "test" and "train"
+1) Merges, more specifically binds the training and the test sets by rows to create one data set (dat1)
+2) Uses descriptive activity names from the activity-labels text file to name the activities in the data set
+3) Appropriately labels the data set with descriptive variable names from the features text file
+4) Extracts only the measurements on the mean and standard deviation for each measurement.
+5) From the data set in step 4, creates a second, independent tidy data set (dat2) with the average of each variable for each activity and each subject. Saves data set as a text file, which was uploaded as "CourseProject_DataSet.txt"
+
+
+## Variables
+* Set: Indicator variable that denotes whether the subject was assigned to the training or test group (values: train and test, respectively)
+* Subject: Indicator variable that numerically describes the 30 subjects (Values: 1, 2, ..., 30)
+* Activity: Descriptors of the activity (Values: WALKING, WALKING UPSTAIRS, WALKING DOWNSTAIRS, SITTING, STANDING, LAYING)
+* Remaining Variables: Averaged means and standard deviations for each accelerometer and gyroscope 3-axial raw mesasurement that was obtained during the subjects' activities

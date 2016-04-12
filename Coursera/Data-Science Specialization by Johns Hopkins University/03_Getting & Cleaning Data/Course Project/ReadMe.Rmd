@@ -1,0 +1,3 @@
+This repo is part of the project of Coursera's and Johns Hopkins University's course "Getting and Cleaning Data".
+
+The project assignment was to create a script that is contained in this repo (run_analysis.R) and a code book (CodeBook.Rmd) that explains where the raw data came from, which procedures were done, and what the variables of the final data set mean.
