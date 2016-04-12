@@ -1,0 +1,167 @@
+---
+title: "Central Limit Theorem Applied to an Exponential Distribution"
+author: "Stefan Schmager"
+date: "January 31, 2016"
+output:
+  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+---
+
+This is the first project for the course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).
+
+## 1. Introduction 
+
+In this project the **Central Limit Theorem** (CLT), one of the most important theorems in statistics, will be investigated and applied to an **exponential distribution**.
+
+The CLT states that **distributions of averages** of independent and identically distributed (iid) variables from **any distribution (such as the exponential)** becomes that of a **normal distribution** as the sample size increases.
+
+The below mentioned packages are loaded to help manipulate and visualize sample data.
+
+```{r message = F}
+library(dplyr)    # Data manipulation
+library(ggplot2)  # Data visualization
+```
+
+## 2. Exponential Distribution
+
+The exponential distribution serves as a CLT application example here although any other distribution (e.g. binomial, uniform, or normal distribution itself) would render similar observations.
+
+Exponential distributions are characterized by *lambda, the rate parameter* which characterizes the distribution steepness and is set to $\lambda = `r lambda`$.
+The *theoretical (population) mean of an exponential distribution $\mu$* is $1/\lambda = `r mean`$ and the *theoretical (population) standard deviation $\sigma$* is also $1/\lambda = `r stdev`$. The *theoretical (population) variance $\sigma^2$* is $1/\lambda^2 = `r variance`$.
+
+```{r Exponential Distribution: Population}
+# Set rate parameter
+lambda      <- .2
+
+# Compute theoretical (population) measures
+mean        <- 1/lambda
+stdev       <- 1/lambda
+variance    <- stdev^2
+```
+
+Further, a sample of random variables $X_1,\ldots,X_n$ is drawn from the exponential distribution with $\lambda = `r lambda`$ and a size of $n = `r samplesize * simreps`$. The sample size is based on the project's simulation requirements: a sample distribution ($n = `r simreps`$) of sample means computed from an exponential distribution ($n = `r samplesize`$) is going to be simulated.  
+
+```{r Exponential Distribution: Sampling}
+# Generate distribution sample
+samplesize        <- 40
+simreps           <- 1000
+set.seed(1)
+exp_distr <- data.frame(rvar = rexp(n = samplesize * simreps, rate = lambda))
+
+# Compute sample measures for exponential distribution
+samplemean        <- round(mean(exp_distr$rvar), 2)
+samplestdev       <- round(sd(  exp_distr$rvar), 2)
+samplevariance    <- round(samplestdev^2, 2)
+```
+
+But the simulation is further elaborated, let's take a look at the sample exponential distribution
+
+```{r Exponential Distribution: Graph}
+# Visualize sample distribution
+ggplot(exp_distr, aes(rvar)) +
+      labs(title = "Sampling Exponential Distribution (n = 40,000)",
+           y     = "Count",
+           x     = "Random Variable") +
+      geom_histogram(binwidth=1, colour="black", fill="white") +
+      # Draw sample measures in red
+      geom_vline(aes(xintercept=samplemean),
+                 linetype="solid", size=1, colour="red") +
+      geom_vline(aes(xintercept=samplemean+samplestdev),
+                 linetype="dashed", size=1, colour="red") +
+      geom_vline(aes(xintercept=samplemean-samplestdev),
+                 linetype="dashed", size=1, colour="red") +
+      scale_x_continuous(breaks = seq(0, 40, 5)) +
+      coord_cartesian(xlim=c(0, 40))
+
+```
+
+The histogram of the distribution shows a typical exponential shape with exponentially decreasing bins. As mentioned before, the steepness is determined by the rate parameter $\lambda$; the higher the parameter value, the steeper and vice versa.
+The *sample mean* $\bar x_n = `r samplemean`$ (red, solid line) and *sample standard deviation* $s_n = `r samplestdev`$ (two red, dashed lines left and right from the mean) are drawn. The *sample variance* is $s^2_n = `r samplevariance`$. All **sample measure are approximately equal to the theoretical measures**. 
+
+## 3. Simulation of the Central Limit Theorem
+
+To better understand this simulation, its components are organized in a $`r samplesize`$ by $`r simreps`$ dataset. The simulated sampling distribution of sample averages with $`r simreps`$ observations and the equal amount of row means of $`r samplesize`$ random variables (columns), iid and ramdoly drawn from an exponential distribution, is organized in this data set.
+The first three rows of the dataset are provided with the first and last three iid random exponential variables in columns V1, V2, V3 and V38, V39, V40 respectively.
+
+```{r Simulation: Sampling}
+# Create simulation dataset
+simulation <- NULL
+simulation <- as.data.frame(matrix(exp_distr$rvar,
+                                   nrow   = simreps,
+                                   ncol   = samplesize))
+simulation <- mutate(simulation, averages = rowMeans(simulation))
+
+# Compute sample measure for distribution of averages means
+samplemean2       <- round(mean(simulation$averages), 2)
+samplestdev2      <- round(sd(  simulation$averages), 2) 
+samplevariance2   <- round(var( simulation$averages), 2)
+
+# Display first and last three random variables from exp. distr. and row mean/average 
+head(simulation[, c(1:3, 38:41)], 3)
+```
+
+The subject of CLT is the **sampling distribution of sample averages**, therefore the distribution of the $`r simreps`$ row means in the column averages. It is visualized below.
+
+```{r Simulation: Graph}
+# Distribution of sample means
+ggplot(simulation, aes(averages)) +
+      labs(title = "Sampling Distribution of Sample Means (n = 1,000)",
+           y = "Density",
+           x = "Sample Means") +
+      # Histogram with density instead of count on y-axis
+      geom_histogram(aes(y=..density..),      
+                   binwidth=.1,
+                   colour="black", fill="white") +
+      # Overlay with transparent density plot
+      geom_density() +
+      geom_vline(aes(xintercept = samplemean2),
+                 linetype="solid",  size=1, colour="green")   +
+      geom_vline(aes(xintercept = samplemean2 + samplestdev2),
+                 linetype="dashed", size=1, colour="green")   +
+      geom_vline(aes(xintercept = samplemean2 - samplestdev2),
+                 linetype="dashed", size=1, colour="green")
+```
+
+The histogram and overlying density function has the shape of a normal distribution, exactly as the CLT states. The proof of that is yet to be delivered.
+The distribution's *sample mean* $\mu_\bar X = `r samplemean2`$ (green, solid line) and *sample standard deviation* $\sigma_\bar X = `r samplestdev2`$ (two green, dashed lines left and right from the mean) are drawn. The *sample variance* is $\sigma^2_\bar X = `r samplevariance2`$. They will now be compared to their theoretical (population) counterparts.
+
+## 4. Comparison of Theoretical and Sample Measures of the Distributions
+
+Measure     Theoretical Distr.      Exp. Distr. ($n = `r simreps*samplesize`$) 
+---------   ------------------      ----------------------------------
+Mean        $\mu = `r mean`$                    $\bar x_n = `r samplemean`$
+Std. Dev.   $\sigma = `r stdev`$                $s_n = `r samplestdev`$
+Var.        $\sigma^2 = `r variance`$           $s^2_n = `r samplevariance`$
+
+Measure     Theoretical Distr.      Distr. of Sample Means ($n = `r simreps`$) 
+---------   ------------------      ----------------------------------
+Mean        $\mu = `r mean`$                    $\mu_\bar X = `r samplemean2`$
+Std. Dev.   $\sigma = `r stdev`$                $\sigma_\bar X = `r samplestdev2`$
+Var.        $\sigma^2 = `r variance`$           $\sigma^2_\bar X = `r samplevariance2`$
+
+The sample mean $\mu_ \bar X$ of the distribution of sample means $\bar x$ is asymptotically equal to that of the theoretical distribution $\mu$; it estimates the population mean.
+The standard deviation of the sampling distribution of sample means $\sigma_\bar X$ is also referred to as the **standard error of the mean**.
+
+## 5. Test for Normality of the Distribution of Sample Means
+
+To reiterate the CLT: a distribution of averages of iid variables (such as exponentials) has a distribution like that of a standard normal for large sample sizes (such as $n = `r simreps`$). The graph titled "Sampling Distribution of Sample Means" indeed takes the shape of a normal-distribution typical "Gaussian" bell curve centered around the theoretical/sample mean (green, solid line).
+To test whether that visual impression is in fact true, a Qantile-Quantile (QQ) scatter plot is commonly used in which two sets of quantiles are plotted against one another. If both sets of quantiles came from the same distribution (normal), we should see the points forming a line (an identity line in normalized cases) that's roughly straight.
+
+```{r QQ-Plot}
+# Draw a Q-Q plot
+qqnorm(simulation$averages,
+       xlab = "Theoretical Quantiles of Normal Distribution",
+       ylab = "Sample Quantiles of Distribution of Sample Means")
+# Draw straight test line
+qqline(simulation$averages, col = "red")
+```
+
+The quantiles of the sampling distribution of sample means are indeed aligned with the theoretical quantiles along the red line. **The Central Limit Theorem is proven: the sampling distribution of a large collection of sample averages of any distribution is that of a normal distribution.** Although the distribution *where* the sample averages are drawn from *may not be normal* (here: exponential), the distribution *of* sample averages is always *normal*.
+
+
+## 6. Conclusion
+
+The CLT was applied to an exponential distribution, thereby explained and proven. The theorem's power and significance is due its application to any other underlying distribution and implications for other statistical concepts. It is indeed one of the most important theorems in statistics because of its implications for confidence intervals and hypothesis testing.
+
+For example: the CLT is very important in poll research for instance where it may be applied to the Bernoulli distribution, e.g. voters vote either for (1) or against (0) a candidate. With the help of the CLT margins of error and certain confidence intervals around an average of "pro" or "contra" voters can be provided.
