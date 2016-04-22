@@ -7,9 +7,7 @@ Each folder in this repository contains my coursework and certificates of accomp
 
 ## Coursera Data-Science Specialization by Johns Hopkins University - School of Public Health
 
-Taught by the amazing biostatistics professor trio of [Roger Peng](https://www.coursera.org/instructor/rdpeng), Brian Caffo, and Jeff Leek  
-
-So far, I have completed the courses:
+Taught by the amazing biostatistics professor trio of [Roger Peng](https://www.coursera.org/instructor/rdpeng), [Brian Caffo](https://www.coursera.org/instructor/~47), and [Jeff Leek](https://www.coursera.org/instructor/~315), I have completed the courses:
 
 1. The Data Scientist’s Toolbox
 2. R Programming
@@ -27,3 +25,11 @@ Starting in the fall 2016, I intend to wrap up the series by completing the cour
 
 
 For more information about the specialization and its courses visit www.coursera.org/specializations/jhu-data-science
+
+## Udacity
+
+Taught by Udacity founder and Stanford professor, I took the primer class of Intro to Statistics: Making Decisions Based on Data.
+
+## edX
+
+Taught by Berkley statistics professors, I took another primer class: Introduction to Descriptive Statistics.
