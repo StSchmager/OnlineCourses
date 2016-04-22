@@ -17,9 +17,10 @@ Taught by the amazing biostatistics professor trio of [Roger Peng](https://www.c
 6. Statistical Inference
 7. Regression Models
 
-For all classes, I compiled my coursework in the sub-repositories. However, for some classes I did not get a certificate of accomplishments due to Coursera's evolving pay model. The first classes concluded with a complimentary certificate. When I completed Reproducible Research, for instance, Coursera switched to paid certificates, although I completed the course as seen in my coursework. The latest class, Regression Models, was concluded with a paid certificate.
+For all classes, I compiled my coursework in the sub-repositories.
+However, for some classes, certificates of accomplishments were not issues due to Coursera's evolving pay model. The first classes concluded with a complimentary certificate. When I completed Reproducible Research, for instance, Coursera switched to paid certificates; although I completed the whole course, I didn't get a certificate. The latest class, Regression Models, was concluded with a certificate that was paid for.
 
-Starting in the fall 2016, I intend to wrap up the series by completing the courses:
+Starting in the fall 2016, I intend to wrap up the series by completing the final courses:
 
 * Practical Machine Learning
 * Developing Data Products
