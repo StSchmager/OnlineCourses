@@ -17,19 +17,20 @@ Taught by the amazing biostatistics professor trio of [Roger Peng](https://www.c
 6. Statistical Inference
 7. Regression Models
 
+For all classes, I compiled my coursework in the sub-repositories. However, for some classes I did not get a certificate of accomplishments due to Coursera's evolving pay model. The first classes concluded with a complimentary certificate. When I completed Reproducible Research, for instance, Coursera switched to paid certificates, although I completed the course as seen in my coursework. The latest class, Regression Models, was concluded with a paid certificate.
+
 Starting in the fall 2016, I intend to wrap up the series by completing the courses:
 
 * Practical Machine Learning
 * Developing Data Products
 * Data Science Capstone
 
-
-For more information about the specialization and its courses visit www.coursera.org/specializations/jhu-data-science
+For more information about the specialization and its courses visit [Coursera.org](www.coursera.org/specializations/jhu-data-science)
 
 ## Udacity
 
-Taught by Udacity founder and Stanford professor, I took the primer class of Intro to Statistics: Making Decisions Based on Data.
+Taught by Udacity founder and Stanford professor, I took the primer class of [Intro to Statistics: Making Decisions Based on Data](https://www.udacity.com/course/intro-to-statistics--st101). All coursework was submitted interactively in the video lecture sessions, so that I couldn't record any kind of programming scripts or project write-ups.
 
 ## edX
 
-Taught by Berkley statistics professors, I took another primer class: Introduction to Descriptive Statistics.
+Taught by Berkley statistics professors, I took another primer class: [Introduction to Descriptive Statistics](https://www.edx.org/course/introduction-statistics-descriptive-uc-berkeleyx-stat2-1x).  All coursework was submitted interactively in the video lecture sessions, so that I couldn't record any kind of programming scripts or project write-ups.
