@@ -30,7 +30,7 @@ For more information about the specialization and its courses visit [Coursera.or
 
 ## Udacity
 
-Taught by Udacity founder and Stanford professor, I took the primer class of [Intro to Statistics: Making Decisions Based on Data](https://www.udacity.com/course/intro-to-statistics--st101). All coursework was submitted interactively in the video lecture sessions, so that I couldn't record any kind of programming scripts or project write-ups.
+Taught by Udacity founder and Stanford professor Sebastian Thrun (whom I really admire), I took the primer class of [Intro to Statistics: Making Decisions Based on Data](https://www.udacity.com/course/intro-to-statistics--st101). All coursework was submitted interactively in the video lecture sessions, so that I couldn't record any kind of programming scripts or project write-ups.
 
 ## edX
 
