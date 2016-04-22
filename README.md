@@ -5,7 +5,9 @@ Udacity and edX have helped me to refresh on basic statistics at the very beginn
 
 Each folder in this repository contains my coursework and certificates of accomplishment from the respective institutions.
 
-## Coursera Data-Science Specialization by Johns Hopkins University
+## Coursera Data-Science Specialization by Johns Hopkins University - School of Public Health
+
+Taught by the amazing biostatistics professor trio of [Roger Peng](https://www.coursera.org/instructor/rdpeng), Brian Caffo, and Jeff Leek  
 
 So far, I have completed the courses:
 
@@ -22,5 +24,6 @@ Starting in the fall 2016, I intend to wrap up the series by completing the cour
 * Practical Machine Learning
 * Developing Data Products
 * Data Science Capstone
+
 
 For more information about the specialization and its courses visit www.coursera.org/specializations/jhu-data-science
