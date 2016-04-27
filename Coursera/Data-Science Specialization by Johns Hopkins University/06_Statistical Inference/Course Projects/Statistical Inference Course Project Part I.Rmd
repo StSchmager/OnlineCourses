@@ -2,10 +2,9 @@
 title: "Central Limit Theorem Applied to an Exponential Distribution"
 author: "Stefan Schmager"
 date: "January 31, 2016"
-output:
-  pdf_document:
-    latex_engine: xelatex
-  html_document: default
+output: 
+  word_document: 
+    fig_width: 9
 ---
 
 This is the first project for the course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).

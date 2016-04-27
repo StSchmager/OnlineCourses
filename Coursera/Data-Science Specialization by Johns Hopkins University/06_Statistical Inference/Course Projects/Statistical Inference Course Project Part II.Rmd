@@ -4,10 +4,10 @@ title: Basic Inferential Data Analysis (Hypothesis Testing with Confidence Inter
 author: "Stefan Schmager"
 date: "January 31, 2016"
 output:
-  html_document: default
+  word_document:
+    fig_width: 9
   pdf_document:
-    fig_height: 3
-    toc: yes
+    fig_crop: no
 ---
 
 This is the second project for the course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).
@@ -351,7 +351,7 @@ GraphII
 
 **Graph III** shows both a left and right skewed distribution for the OJ and VC subset respectively. The OJ subset data distribution seems also to be bimodal. 
 
-```{r Distributions by Comination of Delivery Method & Dose}
+```{r Distributions by Combination}
 # Histogram, density functions, means, and medians of tooth length by combination of supplement/delivery type and dose levels
 GraphIV <-
 ggplot(ToothGrowth, aes(len)) +
@@ -372,7 +372,7 @@ Although the data looks mound shaped, it lacks symmetrie. Because of the skewedn
 
 Taking logs to transform the data in a assumption-conform, normal distribution is pursued below.
 
-```{r}
+```{r Logarithmized Histograms}
 
 # Logaritmize (natural logarithm) the toot-length variable
 ToothGrowth$loglen <- log(ToothGrowth$len)
