@@ -4,27 +4,27 @@ title: Basic Inferential Data Analysis (Hypothesis Testing with Confidence Inter
 author: "Stefan Schmager"
 date: "January 31, 2016"
 output:
+  html_document: default
   pdf_document:
     fig_height: 3
     toc: yes
-  html_document: default
 ---
 
-This is part two of the project for course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).
+This is the second project for the course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).
 
 # 1. Introduction
 
-In this course project, the *ToothGrowth* data from the R *datasets* package is analyzed, which may show "The Effect of Vitamin C on Tooth Growth in Guinea Pigs". In the context of this course, it is used to practice the application of confidence intervals and hypothesis testing as tools of basic inferential data analysis.
+In this course project, on of the practice datasets (*ToothGrowth* data from the R *datasets* package) is analyzed, which may show "The Effect of Vitamin C on Tooth Growth". In the context of this course, the is used to practice the application of confidence intervals and hypothesis testing as tools of basic inferential data analysis.
 
 # 2. Data Summary
 
-The dataset is loaded. One of its variables is transformed to a factor variable, before the whole data is summarized and explained.
+The dataset is loaded. One of its variables is transformed to a factor variable, before the whole data structure is summarized and explained.
 
 ```{r Load & summarize data}
 # Load dataset
 data(ToothGrowth)
 
-# Convert numeric dose values to factor (dose levels) 
+# Convert three numeric dose values to factorized dose levels
 ToothGrowth$dose <- factor(ToothGrowth$dose)
 
 # Show structure of dataset
@@ -38,7 +38,7 @@ table(ToothGrowth$dose,
       ToothGrowth$supp)
 ```
 
-The dataset contains 60 rows (observations) with 3 columns (measurements per observation) as examplified in the displayed first and last three observations of the data set. The variables are described as:
+The dataset contains 60 rows (observations) with 3 columns (measurements per observation) as examplified in the dataset snapshot that displays the first and last three observations of the data set. The variables are described as:
 
 * _len_: __Tooth length__ in some undefined measure of length (quantitative, numeric variable)
 * _dose_: __Vitamine-C dose__ in milligrams/day (although numeric values by nature, converted to qualitative, ordinal factor variable) with just three dose levels:
@@ -49,78 +49,80 @@ The dataset contains 60 rows (observations) with 3 columns (measurements per obs
       + _OJ_: Orange juice
       + _VC_: Ascorbic acid, another form of vitamin C
       
-The contingency table shows that the total 60 observations were grouped equally. They are 10 observations in each of the 6 treatment groups. Each group of guinea pigs was treated with one of the 6 combinations of the 3 Vitamin-C doses x 2 delivery methods. The effects of those treatments on the tooth length (technically, length of the odontoblasts, cells responsible for tooth growth) shall be investigated.
+The contingency table shows that the total 60 observations were grouped equally; there are 10 observations in each of the 6 treatment groups. Each group of guinea pigs was treated with one of the 6 treatment combinations of the 3 Vitamin-C doses x 2 delivery methods. The effects of those treatments on the tooth length (technically, length of the odontoblasts which are cells responsible for tooth growth) shall be investigated.
 
-# 3) Exploratory Data Analysis & Hypothesis Formulating
+# 3. Exploratory Data Analysis (EDA) & Hypothesis Formulating
 
-Before hypotheses can be tested, they must be formulated first. Therefore, the data is explored/analyzed with the help of some common visualization tools. The distribution of the whole dataset and partial data subsets are especially investigated due to its implications for the hypthesis testing.
+Before hypotheses can be tested, they must be formulated first. Therefore, the data is explored and analyzed with the help of boxplots, a common data visualization and EDA tool.
 
-The packages *dplyr* & *ggplot2* are loaded to assist the exploratory data analysis. 
+The packages *dplyr* & *ggplot2* are loaded and will be used to facilitate EDA. 
 
 ```{r Load packages, message = F}
 # data manipulation
-library(plyr)
-library(dplyr)   
-library(ggplot2) # data visualizations
+library( plyr)
+library(dplyr)
+# data visualizations
+library(ggplot2)
 ```
 
-As mentioned before, the dataset contains factor variables with three (dose) and two levels (delivery method) respectively whose effects on tooth length (numeric variable) can be tested. Let's hypothesize the effects by taking a look at a couple of boxplots.
+As mentioned before, the dataset contains factor variables _dose_ and _delivery menthod_ with three and two levels respectively whose effects on tooth length (numeric variable) can be tested. Let's hypothesize the effects by taking a look at a couple of boxplots.
 
 ```{r Boxplots}
+# Draw boxplots
 par(mfrow=c(1,2))
 
 ggplot(ToothGrowth, aes(x = dose, y = len)) +
       geom_boxplot() +
       facet_grid(. ~ supp) +
       labs(title = "Boxplot I",
-           x     = "Vitamine-C Delivery Method & Dose",
-           y     = "Tooth Length (in mg/day)")
+           x     = "Vitamine-C Delivery Method & Dose (in mg/day)",
+           y     = "Tooth Length")
 
 ggplot(ToothGrowth, aes(x = supp, y = len)) +
       geom_boxplot() +
       facet_grid(. ~ dose) +
       labs(title = "Boxplot II",
-           x     = "Vitamine-C Dose & Delivery Method",
-           y     = "Tooth Length (in mg/day)")
+           x     = "Vitamine-C Dose & Delivery Method (in mg/day)",
+           y     = "Tooth Length")
 ```
 
 The boxplots suggest the following two sets of null hypotheses $H_0$ and respective alternative hypotheses $H_a$.
 
-## 3.1) Effects of Vitamin-C Dosis on Tooth Length
+## 3.1. Effects of Vitamin-C Dosis on Tooth Length
 
-Null hypothesis *$H_0_1$:*
-The mean tooth length of guinea pigs that where given *0.5 mg* of vitamin C per day is *equal to*
-the mean tooth length of guinea pigs that where given *1.0 mg* of vitamin C per day is *equal to*
-the mean tooth length of guinea pigs that where given *2.0 mg* of vitamin C per day is *equal to*
+Null hypothesis $H_0_1$:
+The mean tooth length of guinea pigs that where given _0.5 mg_ of vitamin C per day is _equal to_
+the mean tooth length of guinea pigs that where given _1.0 mg_ of vitamin C per day is _equal to_
+the mean tooth length of guinea pigs that where given _2.0 mg_ of vitamin C per day is _equal to_
 
-To reject the *$H_0_1$*, **both** sub hypotheses of *$H_a_1$* have to be be maintained. 
+To reject the $H_0_1$, __both__ sub hypotheses of $H_a_1$ have to be be maintained. 
 
-Alternative hypothesis *$H_a_1$:*
-- Alternative sub-hypothesis *$H_a_1a$:*
-The mean tooth length of guinea pigs that where given *2.0 mg* of vitamin C per day is *greater than* the mean tooth length of guinea pigs that where given *1.0 mg* of vitamin C per day.
-- Alternative sub-hypothesis *$H_a_1b$:*
-The mean tooth length of guinea pigs that where given *1.0 mg* of vitamin C per day is *greater than*
-the mean tooth length of guinea pigs that where given *0.5 mg* of vitamin C per day.
+Alternative hypothesis $H_a_1$:
+* Alternative sub-hypothesis $H_a_1a$:
+The mean tooth length of guinea pigs that where given _2.0 mg_ of vitamin C per day is _greater than_ the mean tooth length of guinea pigs that where given _1.0 mg_ of vitamin C per day.
+* Alternative sub-hypothesis $H_a_1b$:
+The mean tooth length of guinea pigs that where given _1.0 mg_ of vitamin C per day is _greater than_
+the mean tooth length of guinea pigs that where given _0.5 mg_ of vitamin C per day.
 
-## 3.2) Effects of Vitamin-C Delivery Method on Tooth Length
+## 3.2. Effects of Vitamin-C Delivery Method on Tooth Length
 
-*$H_0_2$:*
+$H_0_2$:
 The mean tooth length of guinea pigs that where given *OJ* is *equal to*
 the mean tooth length of guinea pigs that where given *VC*.
 
-*$H_a_2$:*
-The mean tooth length of guinea pigs that where given *OJ* is *unequal to* (*)
+$H_a_2$:
+The mean tooth length of guinea pigs that where given *OJ* is *unequal to* (see remark)
 the mean tooth length of guinea pigs that where given *VC*.
 
-* The boxplots provides even reason to hypothesize that mean tooth length under the OJ treatment is greater than the one under the VC treatment, but a two-sided test wanted to be exercised after one-sided tests were already suggested in teh first set of hypotheses.
+Remark: The boxplots provides even reason to hypothesize that mean tooth length under the OJ treatment is greater than the one under the VC treatment, but a two-sided test wanted to be executed after one-sided tests were already suggested in the first set of hypotheses.
 
-# 4) Hypothesis Testing with T Confidence Intervals
+# 4. Hypothesis Testing with T Confidence Intervals
 
-Due to the small sample size of the whole dataset (n = 60) and its even smaller data subsets, a t confidence interval is appropriate for hypothesis testing. However, when applying this technique of inferential statistics, technically the data is assumed to follow a normal distribution although it is said that the t interval is robust to this assumption. Student's t-tests are appropriate for comparing means under relaxed conditions when less is assumed compared to z-tests with more stringent conditions regarding normality. Welch's t-test, which is applied here in R, assumes the least and is therefore the most commonly used test in a two-sample hypothesis test
+Due to the small sample size of the whole dataset (n = 60) and its even smaller data subsets, a t confidence interval is applicable for hypothesis testing. However, when applying this technique of inferential statistics, technically the data is assumed to follow a normal distribution although it is said that the t interval is robust to this assumption. Student's t-tests are appropriate for comparing means under relaxed conditions when less is assumed compared to z-tests with more stringent conditions regarding normality. Welch's t-test, which is applied here in R, assumes the least and is therefore the most commonly used test in a two-sample hypothesis test
 
 ## 4.1) Effects of Vitamin-C Dosis on Tooth Length
 
-The hypotheses are first tested overall, but then also also under the condition of the delivery method in order to check for possible variable interactions of vitamin-C doses and delivery methods.
+The hypotheses are first tested overall disregarding the third variable, but then also also under the condition of the delivery method in order to check for possible variable interactions of vitamin-C doses and delivery methods.
 
 ```{r Hypothesis Testing 1 (Dose Level regardless of Delivery Method)}
 # H01:  Mean_2.0 = Mean_1.0 = Mean_0.5
@@ -141,13 +143,13 @@ t.test(x = ToothGrowth$len[ToothGrowth$dose == "1"],
 
 ```
 
-The mean tooth length of subjects that were given a dose of 2 mg/day is higher than the mean tooth length of those that were given a dose of 1 mg/day. The two-sample t-test determines whether that difference has statistic significance. At 32 degrees of freedom the difference of tooth length means translates into a normalized t-statistic of 4.9; the one-tailed 95% confidence interval starts at a t-score of 4.2 an includes the t-statistic. Therefore, the difference in means is statistically significance at a .05 signficance level. That means, that the chance that the null hypothesis is rejected although it holds true is less than 5% (type I error).
+The tooth length of subjects that were given a dose of 2 mg/day is on average higher than the mean tooth length of those that were given a dose of 1 mg/day. The two-sample t-test determines whether that difference has statistic significance or whether it's just due to chance. At 32 degrees of freedom the average difference of tooth length translates into a normalized t-statistic of 4.9; the one-tailed 95% confidence interval starts at a t-score of 4.2 and includes the t-statistic. Therefore, the difference in means is statistically significance at a .05 signficance level. That means, that the chance that the null hypothesis is rejected although it holds true is less than 5% (type I error).
 
-The p-value, stated in the results of the t-interval hypothesis test, actually condenses that concept. It is much less than 0.001 which in other words implies, that under the null hypothesis the proability of seeing evidence (difference in means) as extreme or more extreme than would be observed by chance alone.
+The p-value, stated in the results of the t-interval hypothesis test, actually condenses what's previously explained. It is much less than 0.001 which in other words implies, that under the null hypothesis the proability of seeing evidence (that is the difference in means) as extreme or more extreme than would be observed by chance alone.
 
 At the customary 95% confidence interval with a a type I error rate of 5% we confirm the alternative hypothesis and reject the null hypothesis. The chance that we mistakingly reject the null hypothesis in favor of the alternative hypothesis although the null hypothesis is true is less than 0.01% and therefore acceptably low.
 
-The p-values for the second sub-hypothesis and all following hypotheses are saved and will be interpreted collectively in __5) Summary of Hypothesis Test Results__.
+The p-values for the second sub-hypothesis and all following hypotheses are saved and will be interpreted collectively in __5. Summary of Hypothesis Test Results__.
 
 ```{r Hypothesis Testing 1 (Dose Level Interaction w/ Delivery Method)}
 # H01:  Mean_2.0 = Mean_1.0 = Mean_0.5
@@ -186,9 +188,9 @@ t.test(x = ToothGrowth$len[ToothGrowth$dose == "1"   & ToothGrowth$supp=="VC"],
 
 ```
 
-## 4.2) Effects of Vitamin-C Delivery Method on Tooth Length
+## 4.2. Effects of Vitamin-C Delivery Method on Tooth Length
 
-Similarly, the hypotheses are also first tested overall, but then also under the condition of the dose in order to check for possible variable interactions of vitamin-C delivery methods and doses. P-values are saved as well and will be interpreted collectively in the next section.
+Similarly, the hypotheses are also first tested overall disregarding the third variable, but then also under the condition of the dose in order to check for possible variable interactions of vitamin-C delivery methods and doses. Instead of repeating the hypothesis-test results repeatedly, P-values are saved as well and will be interpreted collectively in the next section.
 
 ```{r Hypothesis Testing 2 (Supplement Type regardless of Dose Level)}
 # H02: Mean_OJ  = Mean_VC
@@ -234,9 +236,9 @@ t.test(x = ToothGrowth$len[ToothGrowth$supp=="OJ" & ToothGrowth$dose == "2"],
        paired = FALSE)
 ```
 
-## 5) Summary of Hypothesis Test Results
+## 5. Summary of Hypothesis Test Results
 
-The saved p-values are now organized in a dataframe and assigned to their particular alternative hypothesis which they support to test.
+The saved p-values for all hypothesis tests are now organized in a dataframe and assigned to their particular alternative hypothesis which they support to test.
 
 ```{r Summarise Test Results}
 HypTest  <- rbind(cbind(Hypothesis = "Ha1a",    ldply(Ha1a,    data.frame)),
@@ -254,7 +256,7 @@ colnames(HypTest) <- c("Hypothesis", "TestComp", "TestVal")
   
 ```
 
-P-values are then visualized in graph by bars with varying heights according to the values. The customary significance level of 0.05 is represented by the dashed cutoff line. The following visualization helps interpreting the hypothesis tests.
+P-values are then visualized in graph by bars with varying heights according to the values. The customary significance level of 0.05 is represented by the dashed cutoff line. This visualization helps interpreting the hypothesis tests.
 
 ```{r Visualize Test Results}
 par(mfrow=c(1,2))
@@ -265,34 +267,33 @@ ggplot(subset(HypTest, TestComp == "p.value"), aes(Hypothesis, TestVal)) +
       geom_hline(aes(yintercept=.05), linetype = "dashed") +
       geom_label(aes(label = round(TestVal, 3))) +
       labs(title = "Summary of Hypothesis p-values",
-           x     = "Hypothesis",
-           y     = "p-value"); HypSumm
+           x     = "Alternative Hypothesis",
+           y     = "P-value"); HypSumm
 HypSumm +
       coord_cartesian(ylim = c(0, 0.075))
 ```
 
-The first null hypothesis *$H_0_1$* can be rejected with type I errors of less than 5% in favor of the alternative hypothesis *$H_a_1$*, respectively its sub-hypotheses *$H_a_1a$* and *$H_a_1b$*. This applies for hypothesis tests based on overall data, but also for the tests based on data subsets by Vitamin-C delivery methods OJ and VC. 
+The first null hypothesis $H_0_1$ can be rejected with type I errors of less than 5% in favor of the alternative hypothesis $H_a_1$, respectively its sub-hypotheses $H_a_1a$ and $H_a_1b$. This applies for hypothesis tests based on overall data disregarding overall delivery methods, but also for the tests based on data subsets taking into account the interaction of the variable Vitamin-C delivery method (OJ or VC). 
 
-The second null hypothesis *$H_0_2$* can __not__ be rejected with sufficient confidence. Its p-value is 0.061 and exceeds the significance level of 0.05; in other words, the chance that we mistakingly reject the null hypothesis in favor of the alternative hypothesis although the null hypothesis is true is 6%. Therefore, we cannot be sufficiently confident that the effect of a higher mean tooth length of guine pigs treated with OJ compared to VC was not due to chance in the sample.
+The second null hypothesis $H_0_2$ can__not__ be rejected with sufficient confidence. Its p-value is 0.061 and exceeds the customary significance level of 0.05; in other words, the chance that we mistakingly reject the null hypothesis in favor of the alternative hypothesis although the null hypothesis is true is 6%. Therefore, we cannot be sufficiently confident that the effect of a higher mean tooth length of guine pigs treated with OJ compared to VC was not due to chance in the sample.
+The same hypothesis test for data subsets by vitamin-c dose levels holds interesting results and explains why the null hypothesis cannot be rejected. Although a statistically significant effect of different supplement types can be observed for smaller doses (0.5 - 1 mg/day with p-values < 0.01), the same effect is far from statistical significance (p-value > 0.9) for a high vitamin-c dose of 2.0 mg/day. 
 
-The same hypothesis test for data subsets by vitamin-c dose levels holds interesting results and explains way the null hypothesis cannot be rejected. Although a statistically significant effect of different supplement types can be observed for smaller doses (0.5-1 mg/day with p-values < 0.01), the same effect is far from statistical significance (p-value > 0.9) for a high vitamin-c dose of 2.0 mg/day. 
-
-## 6) Distrbutional Assumptions for T Confidence Interval Hypothesis
+## 6. Distrbutional Assumptions for T-Confidence Interval Hypothesis Testing
 
 It is said, the t intervals work well for hypothesis testing whenever the distribution of the underlying data is roughly symmetric and mound shaped. Technically, the t interval assumes that the data are iid normal, though it is robust to this assumption. 
 
-The following graphs test these assumptions by visualizing distributions with the help of histograms, density functions, means (solid line), and medians (dashed) of the variable tooth-length
+The following graphs test the normality assumptions by visualizing the data distribution with the help of histograms, density functions, means (solid line), and medians (dashed) of the variable tooth-length
 
-* across and therefore regardless of the other two treatment variables (Graph I)
-* by dose levels (Graph II)
-* by supplement/delivery type (Graph III)
-* by a combination of supplement/delivery type and dose levels (Graph IV)
+* across and therefore regardless of the other two treatment variables (__Graph I__)
+* by dose levels (__Graph II__)
+* by supplement/delivery type (__Graph III__)
+* by a combination of supplement/delivery type and dose levels (__Graph IV__)
 
 ```{r Distribution All}
 GraphI <-
 ggplot(ToothGrowth, aes(len)) +
       labs(title = "Graph I: Disribution of Tooth Length",
-           x     = "Tooth Length (in mg/day)",
+           x     = "Tooth Length",
            y     = "Density") +
       geom_histogram(aes(y = ..density..), binwidth = 1) +
       geom_density(size = 1) +
@@ -301,7 +302,7 @@ ggplot(ToothGrowth, aes(len)) +
 GraphI
 ```
 
-*Graph I* shows a slightly left skewed distribution with a higher median than mean (and even higher modes than median).
+**Graph I** shows a slightly left skewed distribution with a higher median than mean (and even higher modes than median).
 
 ```{r Distributions by Dose}
 len_dose <- group_by(ToothGrowth, dose) %>%
@@ -311,7 +312,7 @@ len_dose <- group_by(ToothGrowth, dose) %>%
 GraphII <-
 ggplot(ToothGrowth, aes(x = len)) +
       labs(title = "Graph II: Distribution of Tooth Length by Vitamin-C Dose",
-           x     = "Tooth Length (in mg/day)",
+           x     = "Tooth Length",
            y     = "Density") +
       geom_histogram(aes(y = ..density.., fill = dose),
                      binwidth = 1, alpha = .5, position = "identity") +
@@ -324,7 +325,7 @@ ggplot(ToothGrowth, aes(x = len)) +
 GraphII
 ```
 
-*Graph II* shows right skewed distributions consistently across the three dose levels. All three distributions also tend to be bimodial.
+**Graph II** shows right skewed distributions consistently across the three dose levels. All three distributions also tend to be bimodial.
 
 ```{r Distributions by Delivery Method}
 len_supp <- group_by(ToothGrowth, supp) %>% 
@@ -334,7 +335,7 @@ len_supp <- group_by(ToothGrowth, supp) %>%
 GraphIII <-
 ggplot(ToothGrowth, aes(x = len)) +
       labs(title = "Graph III: Distribution of Tooth Length by Vitamin-C Delivery Method",
-           x     = "Tooth Length (in mg/day)",
+           x     = "Tooth Length",
            y     = "Density") +
       geom_histogram(aes(y = ..density.., fill = supp),
                      binwidth = 1, alpha = .5, position = "identity") +
@@ -348,14 +349,14 @@ ggplot(ToothGrowth, aes(x = len)) +
 GraphII
 ```
 
-*Graph III* shows both a left and right skewed distribution for the OJ and VC subset respectively. The OJ subset data distribution seems also to be bimodal. 
+**Graph III** shows both a left and right skewed distribution for the OJ and VC subset respectively. The OJ subset data distribution seems also to be bimodal. 
 
 ```{r Distributions by Comination of Delivery Method & Dose}
 # Histogram, density functions, means, and medians of tooth length by combination of supplement/delivery type and dose levels
 GraphIV <-
 ggplot(ToothGrowth, aes(len)) +
       labs(title = "Graph IV: Distribution of Tooth Length by Combination of Vitamin-C Dose & Delivery Method",
-           x     = "Tooth Length (in mg/day)",
+           x     = "Tooth Length",
            y     = "Density") +
       geom_histogram(aes(y=..density..),
                      binwidth = .5) +
@@ -364,10 +365,10 @@ ggplot(ToothGrowth, aes(len)) +
 GraphIV
 ```
 
-*Graph IV* combined the two previous graphs and therefore combines the features of the aforementioned distributions. Features of skewed and bimodal distributions can be observed.
+**Graph IV** combined the two previous graphs and therefore combines the features of the aforementioned distributions. Features of skewed and bimodal distributions can be observed.
 
 *As seen on all graphs, non of the data or subsets of the data follows a clean normal distribution.* 
-Although the data is mound shaped, it lacks symmetrie. Because of the skewedness of the distributions, the spirit of the t interval assumptions are violated. Therefore, it would have made more sense to center the interval at median and *use a different summary from the mean* and/or *take logs to transform the data* in a more suitable distribution for t confidence interval hypothesis testing. The former would require an alternative test equivalent to the t-test but instead of the mean centered around the median (e.g. Wilcoxon or Mann-Whitney tests) . However, due to the assignment notice ("Only use the techniques from class, even if there's other approaches worth considering.") this strategy is not further pursued, though remembered for future applications.
+Although the data looks mound shaped, it lacks symmetrie. Because of the skewedness of the distributions, the spirit of the t interval assumptions are violated. Therefore, it could have made more sense to *use a different summary from the mean* (center the interval at the median) and/or *take logs to transform the data* to a more suitable distribution for t-confidence interval hypothesis testing. The former would require an alternative test equivalent to the t-test but instead of the mean, centered around the median (e.g. Wilcoxon or Mann-Whitney tests) . However, due to the assignment notice ("Only use the techniques from class, even if there's other approaches worth considering.") this strategy is not further pursued, though will be considered for future applications.
 
 Taking logs to transform the data in a assumption-conform, normal distribution is pursued below.
 
@@ -438,12 +439,12 @@ ggplot(ToothGrowth, aes(loglen)) +
 
 The violated assumptions of the t confidence interval were noted and will be taken into consideration when drawing conclusions.
 
-# 5) Conclusions
+# 5. Conclusion
 
-The ToothGrowth dataset contains information about the effects of vitamin-C dose levels and delivery methods (supplement types) on tooth growth in guine pigs. Due to its small sample size the Student's t interval was used to test the hypotheses that (I) varying vitamin-c dose levels and (II) the different vitamin-c supplement types  have an impact on the tooth growth.
+The ToothGrowth dataset contains information about the effects of vitamin-C dose levels and delivery methods (supplement types) on tooth growth in guine pigs. Due to its small sample size the Student's t interval was used to test the hypotheses that (I) varying vitamin-c dose levels and (II) different vitamin-c supplement types  have an impact on the tooth growth.
 
-Although on average, the orange juice group showed a higher tooth length than the asorbic acid group, we cannot infer this effect from the observed sample to the general population if we ignore vitamin-c dose levels. However, orange juice does help guine-pig teeth grow significantly more compared to absorbic acid when smaller vitamin-c doses (0.5-1 mg/day) are applied. When higher vitamin-c doses (2 mg/day) are applied no statistically significant effect could be observed as described more generally before.
+The sample showed higher tooth-length averages with higher dose levels of vitamin C. This effect in the sample can indeed be generalized to the population with high confidence / statistical significance since the t-tests show marginally low error rates. That effect holds true regardless of the deliver method used but also for both supplement types. Whether orange juice or absorbic acid is used, the more vitamin c is "prescribed", the more the guinea pigs' teeth grow.
 
-The sample also showed higher tooth-length averages with higher dose levels of vitamin C. This effect in the sample can indeed be generalized to the population with high confidence / statistical significance since the t-tests show marginally low error rates. That effect holds true regardless of the deliver method used. Whether orange juice or absorbic acid is used, the more vitamin c is "prescribed", the more the guinea pigs' teeth grow.
+Although on average, the orange juice group showed a higher tooth length than the asorbic acid group, we cannot infer this effect from the observed sample to the general population if vitamin-c dose levels are disregarded. However, orange juice does help guine-pig teeth grow significantly more compared to absorbic acid when smaller vitamin-c doses (0.5 - 1 mg/day) are applied. When higher vitamin-c doses (2 mg/day) are applied no statistically significant effect could be observed as described more generally before.
 
-The applied t test comes with the assumption that the underlying data distribution is normal. However, exploratory data analysis has shown that the overall data and data subset distributions are rather skewed (and partly bimodal) than normal (hence, unimodal). An attempted log-transformation has not delivered a normalization of the data. It is therefore suggested to repeat the analysis; either find another way to transform the data of skewed, bimodal distribution to data that is normal distributed and/or to use an equivalent test that compares the median of groups (a statistical measure of central tendency more robust to skewed data) instead of the t test that compares averages/means.
+The applied t test comes with the assumption that the underlying data distribution is normal. However, EDA has shown that the overall data and data subset distributions are rather skewed (and partly bimodal) than normal (hence, unimodal). An attempted log-transformation has not delivered a normalization of the data. It is therefore suggested to repeat the analysis; either find another way to transform the data of skewed, bimodal distribution to data that is normal distributed and/or to use an equivalent test that compares the median of groups (a statistical measure of central tendency more robust to skewed data) instead of the t test that compares averages/means.

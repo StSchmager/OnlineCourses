@@ -1,0 +1,297 @@
+---
+title: Peer Assignment 2 of the Course Reproducible Research- Part of Coursera's John
+  Hopkins University Data Science Specialization Series
+author: "by Stefan Schmager"
+date: "Sunday, April 26, 2015"
+output: html_document
+---
+
+## Assignment Goal
+
+The basic goal of this assignment is to explore the U.S. National Oceanic and Atmospheric Administration's (NOAA) Storm Database and answer some basic questions about severe weather events. The database must be used to answer a pair of research questions and show the code for the entire analysis. The analysis can consist of tables, figures, or other summaries. Any R package may be used to support the analysis.
+
+***
+
+# The Most Harmful Weather Events in the United States from 1950 to 2011 in Terms of Damage to Population Health and Economic Consequences 
+
+## Synopsis
+This analysis is based on publicly available data from the U.S. National Oceanic and Atmospheric Administration's which is downloaded and read into R, the utilized statistical programming software. The original dataset is stripped from irrelevant variables and limited to those variables of interest for the underlying research questions about the most harmful weather events in the US in terms of population health and economic consequences. Dataset records with events outside the country were filtered out. Further, damage measures to determine the most harmful weather events were computed. Last, one graph and table answer each research question and summarize the top ten most harmful weather events according to their computed damage measure. A few remarks describe the limitations of the analysis and give ideas for further analyses.
+
+## Introduction
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, property, and crop damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the NOAA storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and economic damage.
+
+## Data
+
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. The file is downloaded from the linked web site below:
+
+* [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]
+
+There is also some documentation of the database available. Here, one may find how some of the variables are constructed and defined.
+
+* National Weather Service Storm Data [Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+
+* National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+* Additional [Code Book](https://ire.org/media/uploads/files/datalibrary/samplefiles/Storm%20Events/layout08.doc) from IRE (Investigative Reporters & Editors)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+## Data Processing
+
+The following packages are loaded and used in the analysis. The session information are also provided were versions and loaded packages are summarized.
+
+```{r Load packages, warning = FALSE}
+# Load packages
+library(dplyr)
+library(tidyr)
+library(datasets)
+library(ggplot2)
+library(xlsx)
+
+sessionInfo()
+```
+
+```{r Disable scientific notation, echo = FALSE}
+options(scipen=999)
+```
+
+The data set is downloaded from the indicated data source, which is locally saved as a CSV data file in the designated working directory and read into R for further processing.
+```{r Get data, cache=TRUE}
+DataSource  <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+DataFile    <- "StormData.csv"
+DataPlace   <- "~/GitHub/OnlineCourses/Coursera/Data-Science Specialization by Johns Hopkins University/05_Reproducible Research/Peer Assignment 2"
+setwd(DataPlace)
+
+if (!file.exists(DataFile)) {
+      download.file(url = "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2",
+                    destfile = DataFile)
+      }; DownloadDate = date()
+
+DownloadDate
+
+dat <- read.csv(file = DataFile)
+```
+
+The relevant variables for answering the research questions are selected.
+```{r Select relevant variables}
+dat <- select(dat, 
+              STATE, EVTYPE, BGN_DATE,    # U.S. state, event type and date
+              FATALITIES, INJURIES,       # measures for harm of population  
+              PROPDMG, PROPDMGEXP,        # measures for (economic) proporty damage
+              CROPDMG, CROPDMGEXP         # measures for (economic) crop damage   
+              )
+```
+
+The event-date variable is transformed from a character to a date variable, and summarized by its distribution measures.
+The summary of the date variable shows how the database records are distributed over time. For instance, half of the database records were entered after the displayed __median__ date. The database records that serve as inputs of the analysis span from the __min.__ to the __max.__ date summarized below.
+
+```{r Date}
+dat$DATE <- as.Date(dat$BGN_DATE, "%m/%d/%Y")
+summary(dat$DATE)
+```
+
+The data set contains records with state abbreviations that go beyond the Unites States. Therefore, the records must be filtered and limited to those entries that escribe one of the 50 state abbreviations.
+```{r State}
+# Display all states in the initial dataset
+unique(dat$STATE)
+
+# Compare to vector with 50 U.S. states from the R "state" data set
+data(state)
+factor(unique(state.abb))
+
+# Filter out the 50 U.S. states from the dataset
+dat <- dat[dat$STATE %in% state.abb,]
+dat$STATE <- factor(dat$STATE)
+
+# Compare all states in the filtered dataset to the same result at beginning of code chunk
+unique(dat$STATE)
+```
+
+The measures for damage in terms of __population health__ are relatively simply defined by __counts of directly killed (fatalities) and directly injured human beings (injuries)__.
+
+However, the measures for __economic damage__ are defined and computed more complicated according to the [database documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) on page 12, _"[..] Damage estimates should be entered as actual dollar amounts [...] Estimates should be rounded to three significant digits, followed by an alphabetical character signifying the magnitude of the number, i.e., 1.55B for $1,550,000,000. Alphabetical characters used to signify magnitude include "K" for thousands, "M" for millions, and "B" for billions."_
+
+```{r Define and compute variables}
+## Measures in terms of population health are defined
+
+# FATALITIES (Number of directly killed)
+dat$FATALITIES <- as.integer(dat$FATALITIES)
+
+# INJURIES (Number of directly injured)
+dat$INJURIES <- as.integer(dat$INJURIES)
+
+## Measures in terms of economic damage are defined and compute
+
+# PROPDMG/EXP (Property damage in whole numbers and hundredths & A multiplier where Hundred (H), Thousand (K), Million (M), Billion (B))
+dat$PROPDMGEXP <- factor(toupper(dat$PROPDMGEXP))
+
+summary(dat$PROPDMGEXP)
+
+dat$PROPDMGEXP2[dat$PROPDMGEXP == ""]  <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "-"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "?"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "+"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "0"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "1"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "2"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "3"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "4"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "5"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "6"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "7"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "8"] <- 1
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "H"] <- 100
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "K"] <- 1000
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "M"] <- 1000000
+dat$PROPDMGEXP2[dat$PROPDMGEXP == "B"] <- 1000000000
+
+# Computed measure
+dat$PropertyDamage <- dat$PROPDMG*dat$PROPDMGEXP2
+
+# CROPDMG/EXP (Crop damage in whole numbers and hundredths & A multiplier where Hundred (H), Thousand (K), Million (M), Billion (B))
+dat$CROPDMGEXP <- factor(toupper(dat$CROPDMGEXP))
+
+summary(dat$CROPDMGEXP)
+
+dat$CROPDMGEXP2[dat$CROPDMGEXP == ""]  <- 1
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "?"] <- 1
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "0"] <- 1
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "2"] <- 1
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "H"] <- 100
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "K"] <- 1000
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "M"] <- 1000000
+dat$CROPDMGEXP2[dat$CROPDMGEXP == "B"] <- 1000000000
+
+# Computed measure
+dat$CropDamage <- dat$CROPDMG*dat$CROPDMGEXP2
+```
+
+__Note:__
+For full correctness of the analysis, the recorded event types should have been coded to more uniform and distinct descriptions. The displayed event-type records provide an example for the messy data entries: __"thunderstorm winds"__ and __"tstm wind"__ describe the same event, namely __"Thunderstorm (Wind)"__; however, due to non-uniform descriptions the entries cannot be aggregated as such. 
+The information from the [documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) on pages 5 and 6 may be helpful in categorizing the event types, _"The only events permitted in Storm Data are listed in Table 1 of Section 2.1.1. The chosen event name should be the one that most accurately describes the meteorological event leading to fatalities, injuries, damage, etc."_ 
+```{r Unify event type descriptions}
+dat$EVTYPE <- factor(toupper(dat$EVTYPE))
+head(unique(dat$EVTYPE), 10)
+```
+
+The examples listed below show how the recorded event types may be categorized by more uniform event-type descriptions to fascilitate further data aggregation.
+```{r Categorize EVTYPE values}
+# dat$EventType[dat$EVTYPE == ' coastal flood']   <- 'Coastal Flood'
+# dat$EventType[dat$EVTYPE == ' flash flood']     <- 'Flash Flood'
+# dat$EventType[dat$EVTYPE == ' lightning']       <- 'Lightning'
+# dat$EventType[dat$EVTYPE == ' tstm wind']       <- 'Thunderstorm (Wind)'
+# dat$EventType[dat$EVTYPE == ' tstm wind (g45)'] <- 'Thunderstorm (Wind)'
+# dat$EventType[dat$EVTYPE == ' waterspout']	  <- 'Waterspout'
+# dat$EventType[dat$EVTYPE == '?']                <- 'Others'
+```
+
+The dataset, where records with states beyond the U.S. had been filtered out already, is now aggregated per recorded event type across the 50 states and across time from the earliest recorded date and the latest recorded date.
+```{r Aggregate dataset per event-type EVTYPE}
+dat0 <- as.data.frame(summarize(group_by(dat, EVTYPE),
+                               CropDamage        = sum(CropDamage,     na.rm = T),
+                               PropertyDamage    = sum(PropertyDamage, na.rm = T),
+                               Injuries          = sum(INJURIES,       na.rm = T),
+                               Fatalities        = sum(FATALITIES,     na.rm = T)))
+```
+
+The main measures for __economic__ and __population-health__ damage are computed by __adding crop and property damage (both measured in USD)__, as well as __fatalities and injuries (both measured in counts of human beings injured/killed)__ respectively.
+
+The main measures for economic and population-health damage are also truncated (divided by a million and a thousand respetcively) so that high numbers do not inflate tables or graphs later.
+
+Measures for __economic damage__ such as crop and property damage, as well as the sum of both are __measured in billion US dollars__.
+
+Measures for __population-health damage__ such as injuries and fatalities, as well as the sum of both are __measured in counts of thousand__.
+```{r Add and truncate measures}
+# Economic Damage
+dat0$EconDamage <- dat0$CropDamage + dat0$PropertyDamage
+summary(dat0$EconDamage)
+summary(dat0$CropDamage)
+summary(dat0$PropertyDamage)
+
+dat0$CropDamage          <- dat0$CropDamage/    1000000000 # in billions
+dat0$PropertyDamage      <- dat0$PropertyDamage/1000000000 # in billions
+dat0$EconDamage          <- dat0$EconDamage/    1000000000 # in billions
+
+# Population-Health Damage
+dat0$PopDamage           <- dat0$Fatalities + dat0$Injuries
+summary(dat0$PopDamage)
+summary(dat0$Fatalities)
+summary(dat0$Injuries)
+
+dat0$PopDamage           <- dat0$PopDamage/ 1000 # in thousands
+dat0$Fatalities          <- dat0$Fatalities/1000 # in thousands
+dat0$Injuries            <- dat0$Injuries/  1000 # in thousands
+```
+
+## Data Analysis
+The data set is split in two separate ones in order to further answer both research questions.
+
+The event types in each set are also ordered by their total damage measure and filtered to the top 10 most harmful event types. Further, the data sets need to be reshaped (measure columns are gathered and condensed into a column pair of measures and values) in order to be visualized subsequently.
+
+```{r Research Question 1}
+dat1        <- select(dat0, EVTYPE, Fatalities, Injuries, PopDamage) %>% 
+               arrange(desc(PopDamage)) %>% head(10)
+
+table1      <- dat1
+
+dat1        <- gather(select(dat1, -PopDamage), "Measure", "Value", Fatalities, Injuries)
+
+graph1      <- ggplot(dat1, aes(x = reorder(EVTYPE, Value), y = Value, fill = Measure)) +
+               geom_bar(stat = "identity", position = "stack") +
+               theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+               coord_flip() + 
+               ggtitle("Event Types with the Greatest Population Health Damage") +
+               xlab("Event Types") + 
+               ylab("Measure Counts (in Thousands)") +
+               theme(legend.position = "bottom")
+```
+
+```{r Research Question 2}
+dat2        <- select(dat0, EVTYPE, EconDamage, PropertyDamage, CropDamage) %>% 
+               arrange(desc(EconDamage)) %>% head(10)
+
+table2      <- dat2
+
+dat2        <- gather(select(dat2, -EconDamage), "Measure", "Value", PropertyDamage, CropDamage)
+
+graph2      <- ggplot(dat2, 
+               aes(x = reorder(EVTYPE, Value), y = Value, fill = Measure)) + 
+               geom_bar(stat = "identity", position = "stack") +
+               theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+               coord_flip() + 
+               ggtitle("Event Types with the Greatest Economic Consequences") +
+               xlab("Event Types") + 
+               ylab("Measure (in Billion USD)") +
+               theme(legend.position = "bottom")
+```
+
+## Results
+
+### 1. Across the United States, which (top ten) event types **are most harmful with respect to population health**?
+
+As one can see in the graph and table below, most human beings get harmed by __tornados__. That is mostly due to a high count in people injured and less so due to individuals killed.
+
+```{r Answer to Research Question 1}
+graph1
+rename(table1, WeatherEvent = EVTYPE, TotalDamage = PopDamage)
+```
+
+### 2. Across the United States, which (top ten) event types **have the greatest economic consequences**?
+
+As one can see in the graph and table below, most economic damage is caused by __floods__. That is mostly due to a high damage in property and less so due to crop damage.
+
+```{r Answer to Research Question 2}
+graph2
+rename(table2, WeatherEvent = EVTYPE, TotalDamage = EconDamage)
+```
+
+## Remarks For Future Analyses
+
+Per assignment instructions, the types of weather events are indicated by the variable EVTYPE. It contains the individual descriptions of the ones who entered the weather event into the database. Further research should encompass a correct categorization of those event descriptions into more uniform categories. As one can see, the abbreviation TSTM WIND and THUNDERSTORM WIND describe the same weather event, but are listed individually.
+
+Also, further research should pay tribute to the skewed event date distribution. Early years of database entries may want to be filtered out to allow more precision for recent data entries.
+
+Last, it may be interesting to see how certain regions or particular states of the country are affected by weather events and how they compare.

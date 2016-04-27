@@ -3,9 +3,9 @@ title: "Central Limit Theorem Applied to an Exponential Distribution"
 author: "Stefan Schmager"
 date: "January 31, 2016"
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
+  html_document: default
 ---
 
 This is the first project for the course [Statistical Inference](https://www.coursera.org/learn/statistical-inference) hosted by the Johns Hopkins University on Coursera as part of the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science).
@@ -27,9 +27,6 @@ library(ggplot2)  # Data visualization
 
 The exponential distribution serves as a CLT application example here although any other distribution (e.g. binomial, uniform, or normal distribution itself) would render similar observations.
 
-Exponential distributions are characterized by *lambda, the rate parameter* which characterizes the distribution steepness and is set to $\lambda = `r lambda`$.
-The *theoretical (population) mean of an exponential distribution $\mu$* is $1/\lambda = `r mean`$ and the *theoretical (population) standard deviation $\sigma$* is also $1/\lambda = `r stdev`$. The *theoretical (population) variance $\sigma^2$* is $1/\lambda^2 = `r variance`$.
-
 ```{r Exponential Distribution: Population}
 # Set rate parameter
 lambda      <- .2
@@ -40,7 +37,8 @@ stdev       <- 1/lambda
 variance    <- stdev^2
 ```
 
-Further, a sample of random variables $X_1,\ldots,X_n$ is drawn from the exponential distribution with $\lambda = `r lambda`$ and a size of $n = `r samplesize * simreps`$. The sample size is based on the project's simulation requirements: a sample distribution ($n = `r simreps`$) of sample means computed from an exponential distribution ($n = `r samplesize`$) is going to be simulated.  
+Exponential distributions are characterized by *lambda, the rate parameter* which characterizes the distribution steepness and is set to $\lambda = `r lambda`$.
+The *theoretical (population) mean of an exponential distribution $\mu$* is $1/\lambda = `r mean`$ and the *theoretical (population) standard deviation $\sigma$* is also $1/\lambda = `r stdev`$. The *theoretical (population) variance $\sigma^2$* is $1/\lambda^2 = `r variance`$.
 
 ```{r Exponential Distribution: Sampling}
 # Generate distribution sample
@@ -55,7 +53,9 @@ samplestdev       <- round(sd(  exp_distr$rvar), 2)
 samplevariance    <- round(samplestdev^2, 2)
 ```
 
-But the simulation is further elaborated, let's take a look at the sample exponential distribution
+Further, a sample of random variables $X_1,\ldots,X_n$ is drawn from the exponential distribution with $\lambda = `r lambda`$ and a size of $n = `r samplesize * simreps`$. The sample size is based on the project's simulation requirements: a sample distribution ($n = `r simreps`$) of sample means computed from an exponential distribution ($n = `r samplesize`$) is going to be simulated.  
+
+But before the simulation is further elaborated, let's take a look at the sample exponential distribution
 
 ```{r Exponential Distribution: Graph}
 # Visualize sample distribution
