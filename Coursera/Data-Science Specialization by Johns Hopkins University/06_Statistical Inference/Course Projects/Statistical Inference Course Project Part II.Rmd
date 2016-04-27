@@ -120,7 +120,7 @@ Remark: The boxplots provides even reason to hypothesize that mean tooth length 
 
 Due to the small sample size of the whole dataset (n = 60) and its even smaller data subsets, a t confidence interval is applicable for hypothesis testing. However, when applying this technique of inferential statistics, technically the data is assumed to follow a normal distribution although it is said that the t interval is robust to this assumption. Student's t-tests are appropriate for comparing means under relaxed conditions when less is assumed compared to z-tests with more stringent conditions regarding normality. Welch's t-test, which is applied here in R, assumes the least and is therefore the most commonly used test in a two-sample hypothesis test
 
-## 4.1) Effects of Vitamin-C Dosis on Tooth Length
+## 4.1. Effects of Vitamin-C Dosis on Tooth Length
 
 The hypotheses are first tested overall disregarding the third variable, but then also also under the condition of the delivery method in order to check for possible variable interactions of vitamin-C doses and delivery methods.
 

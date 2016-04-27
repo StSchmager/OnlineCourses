@@ -2,8 +2,11 @@
 title: "Central Limit Theorem Applied to an Exponential Distribution"
 author: "Stefan Schmager"
 date: "January 31, 2016"
-output: 
-  word_document: 
+output:
+  pdf_document: 
+    fig_crop: no
+    keep_tex: yes
+  word_document:
     fig_width: 9
 ---
 
